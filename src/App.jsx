@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import GameBoard from './components/GameBoard';
 import Keyboard from './components/Keyboard';
@@ -6,35 +6,85 @@ import Modal from './components/Modal';
 import './App.css';
 
 function App() {
-    // Temporary demo state to test UI
-    const [guesses, setGuesses] = useState([
-        // Example of a completed guess with results
-        [
-            { letter: 'H', status: 'absent' },
-            { letter: 'E', status: 'present' },
-            { letter: 'L', status: 'absent' },
-            { letter: 'L', status: 'absent' },
-            { letter: 'O', status: 'correct' }
-        ]
-    ]);
-    const [currentGuess, setCurrentGuess] = useState('WOR');
-    const [currentRow, setCurrentRow] = useState(1);
-    const [keyboardStatus, setKeyboardStatus] = useState({
-        'H': 'absent',
-        'E': 'present',
-        'L': 'absent',
-        'O': 'correct'
-    });
+    // Game state
+    const [guesses, setGuesses] = useState([]);
+    const [currentGuess, setCurrentGuess] = useState('');
+    const [currentRow, setCurrentRow] = useState(0);
+    const [keyboardStatus, setKeyboardStatus] = useState({});
+    const [gameStatus, setGameStatus] = useState('playing'); // 'playing' | 'won' | 'lost'
     const [showModal, setShowModal] = useState(false);
+    const [modalContent, setModalContent] = useState({ title: '', message: '' });
 
+    // Handle keyboard input from virtual keyboard
     const handleKeyPress = (key) => {
-        console.log('Key pressed:', key);
-        // Logic will be implemented in Phase 3
+        if (gameStatus !== 'playing') return;
+
+        if (key === 'ENTER') {
+            handleEnter();
+        } else if (key === 'DELETE') {
+            handleDelete();
+        } else {
+            handleLetterInput(key);
+        }
     };
 
+    // Handle letter input (A-Z)
+    const handleLetterInput = (letter) => {
+        if (currentGuess.length < 5) {
+            setCurrentGuess(prev => prev + letter);
+        }
+    };
+
+    // Handle delete/backspace
+    const handleDelete = () => {
+        setCurrentGuess(prev => prev.slice(0, -1));
+    };
+
+    // Handle enter/submit (placeholder for now)
+    const handleEnter = () => {
+        if (currentGuess.length === 5) {
+            console.log('Submitting guess:', currentGuess);
+            // TODO: Will connect to backend API in Phase 5
+            // For now, just show a message
+            alert(`You entered: ${currentGuess}\n\nBackend integration coming in Phase 4-5!`);
+        } else {
+            console.log('Not enough letters');
+        }
+    };
+
+    // Handle physical keyboard events
+    useEffect(() => {
+        const handlePhysicalKeyboard = (e) => {
+            if (gameStatus !== 'playing') return;
+
+            const key = e.key.toUpperCase();
+
+            if (key === 'ENTER') {
+                handleEnter();
+            } else if (key === 'BACKSPACE') {
+                e.preventDefault();
+                handleDelete();
+            } else if (/^[A-Z]$/.test(key)) {
+                handleLetterInput(key);
+            }
+        };
+
+        window.addEventListener('keydown', handlePhysicalKeyboard);
+
+        return () => {
+            window.removeEventListener('keydown', handlePhysicalKeyboard);
+        };
+    }, [currentGuess, gameStatus]); // Re-attach listener when dependencies change
+
+    // Handle new game
     const handleNewGame = () => {
-        console.log('New game clicked');
-        // Logic will be implemented later
+        setGuesses([]);
+        setCurrentGuess('');
+        setCurrentRow(0);
+        setKeyboardStatus({});
+        setGameStatus('playing');
+        setShowModal(false);
+        console.log('New game started');
     };
 
     return (
@@ -48,13 +98,13 @@ function App() {
             <Keyboard
                 onKeyPress={handleKeyPress}
                 keyboardStatus={keyboardStatus}
-                disabled={false}
+                disabled={gameStatus !== 'playing'}
             />
             <Modal
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
-                title="Congratulations!"
-                message="You won the game!"
+                title={modalContent.title}
+                message={modalContent.message}
                 onAction={handleNewGame}
                 actionText="Play Again"
             />
