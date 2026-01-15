@@ -1,0 +1,15 @@
+.keyboard {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--gap-sm);
+}
+
+.keyboard-row:last-child {
+    margin-bottom: 0;
+}

@@ -1,0 +1,7 @@
+.game-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+    padding: 10px;
+}

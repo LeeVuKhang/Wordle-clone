@@ -1,0 +1,42 @@
+.header {
+    width: 100%;
+    border-bottom: 1px solid var(--color-absent);
+    margin-bottom: 20px;
+}
+
+.header-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.2rem;
+    margin: 0;
+}
+
+.new-game-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--border-radius);
+    background-color: var(--color-correct);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.new-game-btn:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+.new-game-btn:active {
+    transform: scale(0.95);
+}
