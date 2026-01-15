@@ -1,0 +1,16 @@
+.App {
+    text-align: center;
+    padding: 20px;
+}
+
+.App h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.App p {
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+}
