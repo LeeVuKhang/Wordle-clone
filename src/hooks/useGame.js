@@ -34,6 +34,8 @@ export function useGame() {
     setTimeout(() => setToast(null), 3000);
   }, []);
 
+  const isProcessingRef = useRef(false);
+
   // Load daily game (Task 8.3)
   useEffect(() => {
     async function loadGame() {
@@ -107,9 +109,11 @@ export function useGame() {
   }, []);
 
   const handleEnter = useCallback(() => {
-    if (gameStatus !== 'PLAYING') return;
+    if (gameStatus !== 'PLAYING' || isProcessingRef.current) return;
     if (currentGuess.length < 5) { showToast('Not enough letters', 'warning'); return; }
     if (!isValidGuess(currentGuess)) { showToast('Not in word list', 'warning'); return; }
+
+    isProcessingRef.current = true;
 
     const result = compareWord(currentGuess, targetWord);
     const newWords = [...submittedWords, currentGuess];
@@ -126,6 +130,10 @@ export function useGame() {
     setCurrentGuess('');
     setGameStatus(newStatus);
     syncToServer(gameIdRef.current, newWords, newStatus);
+
+    setTimeout(() => {
+      isProcessingRef.current = false;
+    }, 150);
   }, [gameStatus, currentGuess, targetWord, submittedWords, guessResults, showToast, syncToServer]);
 
   const handleKeyPress = useCallback((key) => {

@@ -7,6 +7,7 @@
 
 import { useState, useCallback } from 'react';
 import { practiceApi } from '../services/api.js';
+import { isValidGuess } from '../utils/compareWord.js';
 
 export function usePractice() {
   const [practiceId, setPracticeId] = useState(null);
@@ -56,6 +57,7 @@ export function usePractice() {
   const handleEnter = useCallback(async () => {
     if (gameStatus !== 'PLAYING' || !practiceId) return;
     if (currentGuess.length < 5) { showToast('Not enough letters', 'warning'); return; }
+    if (!isValidGuess(currentGuess)) { showToast('Not in word list', 'warning'); return; }
 
     setIsLoading(true);
     try {

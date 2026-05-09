@@ -39,6 +39,7 @@ function App() {
   const [mode, setMode]               = useState('daily');   // 'daily' | 'practice'
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mergeResult, setMergeResult] = useState(null);
+  const [modalDismissed, setModalDismissed] = useState(false);
 
   const auth     = useAuth();
   const daily    = useGame();
@@ -74,6 +75,7 @@ function App() {
   // ── Physical keyboard ─────────────────────────────────────────────────
   useEffect(() => {
     const onKeyDown = (e) => {
+      if (e.repeat) return;
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       const key = e.key.toUpperCase();
       if (key === 'ENTER')     game.handleKeyPress('ENTER');
@@ -88,6 +90,10 @@ function App() {
   const isGameOver = game.gameStatus === 'WON' || game.gameStatus === 'LOST';
   const isWon      = game.gameStatus === 'WON';
 
+  useEffect(() => {
+    if (game.gameStatus === 'PLAYING') setModalDismissed(false);
+  }, [game.gameStatus]);
+
   const modalTitle   = isWon ? 'You won!' : 'Game over';
   const modalMessage = isWon
     ? `You got it in ${game.attempts} ${game.attempts === 1 ? 'try' : 'tries'}!`
@@ -95,6 +101,7 @@ function App() {
 
   const handleModeSwitch = useCallback((newMode) => {
     setMode(newMode);
+    setModalDismissed(false);
   }, []);
 
   // ── Loading state ─────────────────────────────────────────────────────
@@ -162,8 +169,8 @@ function App() {
 
       {/* Game-over modal */}
       <Modal
-        isOpen={isGameOver}
-        onClose={() => {}}
+        isOpen={isGameOver && !modalDismissed}
+        onClose={() => setModalDismissed(true)}
         title={modalTitle}
         message={modalMessage}
         onAction={mode === 'practice' ? practice.startSession : undefined}
