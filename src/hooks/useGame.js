@@ -1,0 +1,142 @@
+/**
+ * useGame — Daily game state machine
+ *
+ * WBS Tasks 8.3, 8.5, 8.9
+ */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { gameApi } from '../services/api.js';
+import { compareWord, isValidGuess, deriveKeyboardStatus } from '../utils/compareWord.js';
+import { saveOfflineState, getOfflineState, clearOfflineState } from '../services/guestStorage.js';
+import { enqueueSyncRetry } from '../services/syncRetry.js';
+
+const MAX_ATTEMPTS = 6;
+const SYNC_DEBOUNCE_MS = 500;
+
+export function useGame() {
+  const [gameId, setGameId] = useState(null);
+  const [targetWord, setTargetWord] = useState('');
+  const [guessResults, setGuessResults] = useState([]);
+  const [submittedWords, setSubmittedWords] = useState([]);
+  const [currentGuess, setCurrentGuess] = useState('');
+  const [keyboardStatus, setKeyboardStatus] = useState({});
+  const [gameStatus, setGameStatus] = useState('PLAYING');
+  const [attempts, setAttempts] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const syncTimer = useRef(null);
+  const gameIdRef = useRef(null);
+
+  const showToast = useCallback((message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  // Load daily game (Task 8.3)
+  useEffect(() => {
+    async function loadGame() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await gameApi.getToday();
+        const data = res.data;
+        const word = atob(data.word);
+        setTargetWord(word);
+        setGameId(data.id);
+        gameIdRef.current = data.id;
+        setGameStatus(data.status);
+        setAttempts(data.attempts);
+
+        // Reconcile server state with offline fallback (R9)
+        const offline = getOfflineState();
+        const serverGuesses = data.guesses || [];
+        let reconciledWords = serverGuesses;
+        if (
+          offline &&
+          offline.gameId === data.id &&
+          offline.guesses.length > serverGuesses.length &&
+          data.status === 'PLAYING'
+        ) {
+          reconciledWords = offline.guesses;
+          showToast('Progress restored from offline storage', 'info');
+        }
+
+        const results = reconciledWords.map((w) => compareWord(w, word));
+        setSubmittedWords(reconciledWords);
+        setGuessResults(results);
+        setKeyboardStatus(deriveKeyboardStatus(results));
+
+        if (serverGuesses.length >= (offline?.guesses?.length ?? 0)) {
+          clearOfflineState();
+        }
+      } catch (err) {
+        setError(err.response?.data?.error?.message || "Failed to load today's game");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadGame();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync to server (Task 8.5)
+  const syncToServer = useCallback((id, words, status) => {
+    const dto = { id, guesses: words, status };
+    const today = new Date().toISOString().slice(0, 10);
+    saveOfflineState(id, words, status, today);
+
+    clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(async () => {
+      try {
+        await gameApi.sync(dto);
+        if (status !== 'PLAYING') clearOfflineState();
+      } catch {
+        enqueueSyncRetry(dto);
+      }
+    }, SYNC_DEBOUNCE_MS);
+  }, []);
+
+  const handleLetter = useCallback((letter) => {
+    if (gameStatus !== 'PLAYING' || currentGuess.length >= 5) return;
+    setCurrentGuess((prev) => prev + letter.toUpperCase());
+  }, [gameStatus, currentGuess]);
+
+  const handleDelete = useCallback(() => {
+    setCurrentGuess((prev) => prev.slice(0, -1));
+  }, []);
+
+  const handleEnter = useCallback(() => {
+    if (gameStatus !== 'PLAYING') return;
+    if (currentGuess.length < 5) { showToast('Not enough letters', 'warning'); return; }
+    if (!isValidGuess(currentGuess)) { showToast('Not in word list', 'warning'); return; }
+
+    const result = compareWord(currentGuess, targetWord);
+    const newWords = [...submittedWords, currentGuess];
+    const newResults = [...guessResults, result];
+    const newKeyboard = deriveKeyboardStatus(newResults);
+    const isWon = currentGuess === targetWord;
+    const newAttempts = newWords.length;
+    const newStatus = isWon ? 'WON' : newAttempts >= MAX_ATTEMPTS ? 'LOST' : 'PLAYING';
+
+    setSubmittedWords(newWords);
+    setGuessResults(newResults);
+    setKeyboardStatus(newKeyboard);
+    setAttempts(newAttempts);
+    setCurrentGuess('');
+    setGameStatus(newStatus);
+    syncToServer(gameIdRef.current, newWords, newStatus);
+  }, [gameStatus, currentGuess, targetWord, submittedWords, guessResults, showToast, syncToServer]);
+
+  const handleKeyPress = useCallback((key) => {
+    if (key === 'ENTER') handleEnter();
+    else if (key === 'DELETE' || key === 'BACKSPACE') handleDelete();
+    else if (/^[A-Z]$/.test(key)) handleLetter(key);
+  }, [handleEnter, handleDelete, handleLetter]);
+
+  return {
+    gameId, targetWord, guessResults, submittedWords,
+    currentGuess, keyboardStatus, gameStatus, attempts,
+    isLoading, error, toast, handleKeyPress,
+  };
+}

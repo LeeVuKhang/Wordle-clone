@@ -16,7 +16,7 @@
 }
 
 /* Center the game content */
-.App>*:not(header) {
+.App > *:not(header) {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -28,3 +28,48 @@
     color: var(--color-text-secondary);
     font-size: 1.1rem;
 }
+
+/* Loading & error states */
+.app-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 16px;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--color-absent);
+    border-top-color: var(--color-correct);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.app-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 20px;
+    color: var(--color-text-secondary);
+}
+
+.app-error button {
+    padding: 10px 24px;
+    background: var(--color-correct);
+    color: var(--color-text-primary);
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.app-error button:hover { opacity: 0.9; transform: scale(1.05); }

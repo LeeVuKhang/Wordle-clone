@@ -10,22 +10,22 @@
   --color-surface: #1e1e1f;
   --color-text-primary: #ffffff;
   --color-text-secondary: #a8a8a8;
-  
+
   /* Game colors */
   --color-correct: #538d4e;
   --color-present: #b59f3b;
   --color-absent: #3a3a3c;
   --color-empty: #3a3a3c;
-  
+
   /* Spacing */
   --gap-xs: 4px;
   --gap-sm: 8px;
   --gap-md: 12px;
   --gap-lg: 16px;
-  
+
   /* Border */
   --border-radius: 4px;
-  
+
   /* Animation */
   --animation-duration: 0.3s;
 }

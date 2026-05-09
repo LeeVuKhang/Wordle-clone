@@ -1,46 +1,46 @@
 import Cell from './Cell';
 import './Row.css';
 
-const Row = ({ guess, currentGuess, isCurrentRow }) => {
-    // Create array of 5 cells
-    const cells = [];
+/**
+ * Row — renders 5 cells for one guess attempt
+ *
+ * result   — { letter, status }[] from compareWord() (completed row)
+ * currentGuess — string being typed (active row)
+ */
+const Row = ({ result, currentGuess, isCurrentRow }) => {
+  const cells = [];
 
-    // If this row has a completed guess, use the guess data
-    if (guess) {
-        for (let i = 0; i < 5; i++) {
-            cells.push(
-                <Cell
-                    key={i}
-                    value={guess[i]?.letter}
-                    status={guess[i]?.status}
-                />
-            );
-        }
+  if (result && result.length > 0) {
+    // Completed row — show color-coded result with staggered reveal
+    for (let i = 0; i < 5; i++) {
+      cells.push(
+        <Cell
+          key={i}
+          value={result[i]?.letter || ''}
+          status={result[i]?.status || ''}
+          revealDelay={i * 0.1}
+        />
+      );
     }
-    // If this is the current row being typed, show current input
-    else if (isCurrentRow && currentGuess) {
-        for (let i = 0; i < 5; i++) {
-            cells.push(
-                <Cell
-                    key={i}
-                    value={currentGuess[i] || ''}
-                    status={currentGuess[i] ? 'filled' : ''}
-                />
-            );
-        }
+  } else if (isCurrentRow && currentGuess) {
+    // Active typing row
+    for (let i = 0; i < 5; i++) {
+      cells.push(
+        <Cell
+          key={i}
+          value={currentGuess[i] || ''}
+          status={currentGuess[i] ? 'filled' : ''}
+        />
+      );
     }
-    // Otherwise show empty cells
-    else {
-        for (let i = 0; i < 5; i++) {
-            cells.push(<Cell key={i} value="" status="" />);
-        }
+  } else {
+    // Empty row
+    for (let i = 0; i < 5; i++) {
+      cells.push(<Cell key={i} value="" status="" />);
     }
+  }
 
-    return (
-        <div className="row">
-            {cells}
-        </div>
-    );
+  return <div className="row">{cells}</div>;
 };
 
 export default Row;

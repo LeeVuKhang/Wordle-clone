@@ -1,115 +1,186 @@
-import { useState, useEffect } from 'react';
-import Header from './components/Header';
+import { useState, useEffect, useCallback } from 'react';
+
+import Header    from './components/Header';
 import GameBoard from './components/GameBoard';
-import Keyboard from './components/Keyboard';
-import Modal from './components/Modal';
+import Keyboard  from './components/Keyboard';
+import Modal     from './components/Modal';
+import Toast     from './components/Toast';
+import AuthModal from './components/AuthModal';
+
+import { useAuth }     from './hooks/useAuth';
+import { useGame }     from './hooks/useGame';
+import { usePractice } from './hooks/usePractice';
+import { initSyncRetryService } from './services/syncRetry.js';
+import { authApi } from './services/api.js';
+
 import './App.css';
 
-function App() {
-    // Game state
-    const [guesses, setGuesses] = useState([]);
-    const [currentGuess, setCurrentGuess] = useState('');
-    const [currentRow, setCurrentRow] = useState(0);
-    const [keyboardStatus, setKeyboardStatus] = useState({});
-    const [gameStatus, setGameStatus] = useState('playing'); // 'playing' | 'won' | 'lost'
-    const [showModal, setShowModal] = useState(false);
-    const [modalContent, setModalContent] = useState({ title: '', message: '' });
+// Initialise retry queue listener once at module level
+initSyncRetryService();
 
-    // Handle keyboard input from virtual keyboard
-    const handleKeyPress = (key) => {
-        if (gameStatus !== 'playing') return;
-
-        if (key === 'ENTER') {
-            handleEnter();
-        } else if (key === 'DELETE') {
-            handleDelete();
-        } else {
-            handleLetterInput(key);
-        }
-    };
-
-    // Handle letter input (A-Z)
-    const handleLetterInput = (letter) => {
-        if (currentGuess.length < 5) {
-            setCurrentGuess(prev => prev + letter);
-        }
-    };
-
-    // Handle delete/backspace
-    const handleDelete = () => {
-        setCurrentGuess(prev => prev.slice(0, -1));
-    };
-
-    // Handle enter/submit (placeholder for now)
-    const handleEnter = () => {
-        if (currentGuess.length === 5) {
-            console.log('Submitting guess:', currentGuess);
-            // TODO: Will connect to backend API in Phase 5
-            // For now, just show a message
-            alert(`You entered: ${currentGuess}\n\nBackend integration coming in Phase 4-5!`);
-        } else {
-            console.log('Not enough letters');
-        }
-    };
-
-    // Handle physical keyboard events
-    useEffect(() => {
-        const handlePhysicalKeyboard = (e) => {
-            if (gameStatus !== 'playing') return;
-
-            const key = e.key.toUpperCase();
-
-            if (key === 'ENTER') {
-                handleEnter();
-            } else if (key === 'BACKSPACE') {
-                e.preventDefault();
-                handleDelete();
-            } else if (/^[A-Z]$/.test(key)) {
-                handleLetterInput(key);
-            }
-        };
-
-        window.addEventListener('keydown', handlePhysicalKeyboard);
-
-        return () => {
-            window.removeEventListener('keydown', handlePhysicalKeyboard);
-        };
-    }, [currentGuess, gameStatus]); // Re-attach listener when dependencies change
-
-    // Handle new game
-    const handleNewGame = () => {
-        setGuesses([]);
-        setCurrentGuess('');
-        setCurrentRow(0);
-        setKeyboardStatus({});
-        setGameStatus('playing');
-        setShowModal(false);
-        console.log('New game started');
-    };
-
-    return (
-        <div className="App">
-            <Header onNewGame={handleNewGame} />
-            <GameBoard
-                guesses={guesses}
-                currentGuess={currentGuess}
-                currentRow={currentRow}
-            />
-            <Keyboard
-                onKeyPress={handleKeyPress}
-                keyboardStatus={keyboardStatus}
-                disabled={gameStatus !== 'playing'}
-            />
-            <Modal
-                isOpen={showModal}
-                onClose={() => setShowModal(false)}
-                title={modalContent.title}
-                message={modalContent.message}
-                onAction={handleNewGame}
-                actionText="Play Again"
-            />
-        </div>
-    );
+// ─── OAuth callback handler ───────────────────────────────────────────────────
+/**
+ * If the current URL contains ?code=..., we are on the OAuth redirect-back page.
+ * Extract the code and return it (cleared from the URL), otherwise return null.
+ */
+function consumeOAuthCode() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) {
+    // Clean up URL without a page reload
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return code;
+  }
+  return null;
 }
 
-export default App
+// ─── App ─────────────────────────────────────────────────────────────────────
+function App() {
+  const [mode, setMode]               = useState('daily');   // 'daily' | 'practice'
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [mergeResult, setMergeResult] = useState(null);
+
+  const auth     = useAuth();
+  const daily    = useGame();
+  const practice = usePractice();
+
+  // Active game depends on mode
+  const game = mode === 'daily' ? daily : practice;
+
+  // ── Handle OAuth redirect-back ─────────────────────────────────────────
+  useEffect(() => {
+    const code = consumeOAuthCode();
+    if (!code) return;
+    const redirectUri =
+      import.meta.env.VITE_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/callback`;
+
+    auth.login(code, redirectUri).then((data) => {
+      if (data?.mergeResult) {
+        setMergeResult(data.mergeResult);
+        setShowAuthModal(true);   // show merge success modal
+      }
+    }).catch(() => {
+      // auth.error is set inside the hook
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Start practice session when switching to practice mode ────────────
+  useEffect(() => {
+    if (mode === 'practice' && !practice.practiceId) {
+      practice.startSession();
+    }
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Physical keyboard ─────────────────────────────────────────────────
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      const key = e.key.toUpperCase();
+      if (key === 'ENTER')     game.handleKeyPress('ENTER');
+      else if (key === 'BACKSPACE') { e.preventDefault(); game.handleKeyPress('BACKSPACE'); }
+      else if (/^[A-Z]$/.test(key)) game.handleKeyPress(key);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [game.handleKeyPress]);
+
+  // ── Modal derived state ───────────────────────────────────────────────
+  const isGameOver = game.gameStatus === 'WON' || game.gameStatus === 'LOST';
+  const isWon      = game.gameStatus === 'WON';
+
+  const modalTitle   = isWon ? 'You won!' : 'Game over';
+  const modalMessage = isWon
+    ? `You got it in ${game.attempts} ${game.attempts === 1 ? 'try' : 'tries'}!`
+    : `The word was ${mode === 'daily' ? daily.targetWord : '???'}`;
+
+  const handleModeSwitch = useCallback((newMode) => {
+    setMode(newMode);
+  }, []);
+
+  // ── Loading state ─────────────────────────────────────────────────────
+  if (auth.isLoading || (mode === 'daily' && daily.isLoading)) {
+    return (
+      <div className="app-loading">
+        <div className="spinner" />
+        <p>Loading…</p>
+      </div>
+    );
+  }
+
+  // ── Error state ───────────────────────────────────────────────────────
+  if (mode === 'daily' && daily.error) {
+    return (
+      <div className="App">
+        <Header
+          mode={mode}
+          onSwitchMode={handleModeSwitch}
+          user={auth.user}
+          onAuthClick={() => setShowAuthModal(true)}
+          onLogout={auth.logout}
+        />
+        <div className="app-error">
+          <p>{daily.error}</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="App">
+      <Header
+        mode={mode}
+        onSwitchMode={handleModeSwitch}
+        user={auth.user}
+        onAuthClick={() => setShowAuthModal(true)}
+        onLogout={auth.logout}
+      />
+
+      {/* Toast notifications (Task 8.10) */}
+      <Toast message={game.toast?.message} type={game.toast?.type} />
+
+      {/* Practice loading spinner */}
+      {mode === 'practice' && practice.isLoading && !practice.practiceId && (
+        <div className="app-loading">
+          <div className="spinner" />
+        </div>
+      )}
+
+      {/* Game board */}
+      <GameBoard
+        guessResults={game.guessResults}
+        currentGuess={game.currentGuess}
+        currentRow={game.submittedWords.length}
+      />
+
+      {/* Virtual keyboard (Task 8.9 — colors from in-memory comparison) */}
+      <Keyboard
+        onKeyPress={game.handleKeyPress}
+        keyboardStatus={game.keyboardStatus}
+        disabled={isGameOver || (mode === 'practice' && practice.isLoading)}
+      />
+
+      {/* Game-over modal */}
+      <Modal
+        isOpen={isGameOver}
+        onClose={() => {}}
+        title={modalTitle}
+        message={modalMessage}
+        onAction={mode === 'practice' ? practice.startSession : undefined}
+        actionText={mode === 'practice' ? 'Play again' : undefined}
+      />
+
+      {/* Auth modal (Task 8.2, 8.11) */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => { setShowAuthModal(false); setMergeResult(null); }}
+        onLogin={auth.login}
+        isLoading={auth.isLoading}
+        error={auth.error}
+        mergeResult={mergeResult}
+      />
+    </div>
+  );
+}
+
+export default App;

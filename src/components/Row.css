@@ -1,5 +1,5 @@
 .row {
     display: flex;
-    gap: var(--gap-xs);
-    margin-bottom: var(--gap-xs);
+    gap: 5px;
+    margin-bottom: 5px;
 }

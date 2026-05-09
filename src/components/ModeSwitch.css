@@ -1,0 +1,31 @@
+.mode-switch {
+    display: flex;
+    gap: 2px;
+    background: var(--color-absent);
+    border-radius: var(--border-radius);
+    padding: 3px;
+}
+
+.mode-btn {
+    padding: 5px 14px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: var(--color-text-secondary);
+}
+
+.mode-btn--active {
+    background: var(--color-correct);
+    color: var(--color-text-primary);
+}
+
+.mode-btn:hover:not(.mode-btn--active) {
+    color: var(--color-text-primary);
+    opacity: 0.8;
+}
