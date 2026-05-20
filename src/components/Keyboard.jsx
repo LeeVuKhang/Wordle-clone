@@ -22,6 +22,7 @@ const Keyboard = ({ onKeyPress, keyboardStatus, disabled }) => {
                         value={key}
                         status={keyboardStatus[key]}
                         onClick={handleKeyClick}
+                        disabled={disabled}
                     />
                 ))}
             </div>
@@ -32,6 +33,7 @@ const Keyboard = ({ onKeyPress, keyboardStatus, disabled }) => {
                         value={key}
                         status={keyboardStatus[key]}
                         onClick={handleKeyClick}
+                        disabled={disabled}
                     />
                 ))}
             </div>
@@ -43,6 +45,7 @@ const Keyboard = ({ onKeyPress, keyboardStatus, disabled }) => {
                         status={keyboardStatus[key]}
                         onClick={handleKeyClick}
                         isWide={key === 'ENTER' || key === 'DELETE'}
+                        disabled={disabled}
                     />
                 ))}
             </div>

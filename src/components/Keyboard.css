@@ -1,15 +1,37 @@
 .keyboard {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 10px;
+  width: min(100%, 520px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 auto;
+  padding: 4px 0 2px;
 }
 
 .keyboard-row {
-    display: flex;
-    justify-content: center;
-    margin-bottom: var(--gap-sm);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
 }
 
-.keyboard-row:last-child {
-    margin-bottom: 0;
+@media (max-width: 640px) {
+  .keyboard {
+    gap: 7px;
+  }
+
+  .keyboard-row {
+    gap: 4px;
+  }
+}
+
+@media (max-height: 760px) {
+  .keyboard {
+    width: min(100%, 500px);
+    gap: 5px;
+    padding-bottom: 0;
+  }
+
+  .keyboard-row {
+    gap: 5px;
+  }
 }
