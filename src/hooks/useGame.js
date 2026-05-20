@@ -145,6 +145,6 @@ export function useGame() {
   return {
     gameId, targetWord, guessResults, submittedWords,
     currentGuess, keyboardStatus, gameStatus, attempts,
-    isLoading, error, toast, handleKeyPress,
+    isLoading, error, toast, showToast, handleKeyPress,
   };
 }

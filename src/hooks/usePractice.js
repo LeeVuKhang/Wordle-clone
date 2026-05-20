@@ -117,7 +117,7 @@ export function usePractice() {
   return {
     practiceId, targetWord, guessResults, submittedWords,
     currentGuess, keyboardStatus, gameStatus, attempts,
-    isLoading, error, toast,
+    isLoading, error, toast, showToast,
     startSession, handleKeyPress,
   };
 }

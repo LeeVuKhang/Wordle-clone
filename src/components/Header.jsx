@@ -6,7 +6,15 @@ import './Header.css';
  *
  * WBS Tasks 8.2, 8.8
  */
-const Header = ({ mode, onSwitchMode, user, onAuthClick, onLogout }) => {
+const Header = ({
+  mode,
+  onSwitchMode,
+  user,
+  onAuthClick,
+  onLogout,
+  onStatsClick,
+  onLeaderboardClick,
+}) => {
   const activeModeLabel = mode === 'daily' ? 'Daily' : 'Practice';
 
   return (
@@ -23,6 +31,15 @@ const Header = ({ mode, onSwitchMode, user, onAuthClick, onLogout }) => {
           </a>
 
           <ModeSwitch mode={mode} onSwitch={onSwitchMode} />
+
+          <div className="header-nav" aria-label="Player panels">
+            <button className="header-btn header-btn--tool" type="button" onClick={onStatsClick}>
+              Stats
+            </button>
+            <button className="header-btn header-btn--tool" type="button" onClick={onLeaderboardClick}>
+              Leaderboard
+            </button>
+          </div>
         </div>
 
         <div className="header-side header-auth">

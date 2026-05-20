@@ -3,13 +3,17 @@ import { useState, useEffect, useCallback } from 'react';
 import Header    from './components/Header';
 import GameBoard from './components/GameBoard';
 import Keyboard  from './components/Keyboard';
-import Modal     from './components/Modal';
 import Toast     from './components/Toast';
 import AuthModal from './components/AuthModal';
+import WinModal  from './components/WinModal';
+import LoseModal from './components/LoseModal';
+import StatsModal from './components/StatsModal';
+import LeaderboardModal from './components/LeaderboardModal';
 
 import { useAuth }     from './hooks/useAuth';
 import { useGame }     from './hooks/useGame';
 import { usePractice } from './hooks/usePractice';
+import { useStats }    from './hooks/useStats';
 import { initSyncRetryService } from './services/syncRetry.js';
 
 import './App.css';
@@ -37,15 +41,24 @@ function consumeOAuthCode() {
 function App() {
   const [mode, setMode]               = useState('daily');   // 'daily' | 'practice'
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [mergeResult, setMergeResult] = useState(null);
   const [modalDismissed, setModalDismissed] = useState(false);
 
   const auth     = useAuth();
   const daily    = useGame();
   const practice = usePractice();
+  const {
+    stats,
+    isLoading: isStatsLoading,
+    error: statsError,
+    refetch: refetchStats,
+  } = useStats(auth.user);
 
   // Active game depends on mode
   const game = mode === 'daily' ? daily : practice;
+  const dailyGameDate = new Date().toISOString().slice(0, 10);
 
   // ── Handle OAuth redirect-back ─────────────────────────────────────────
   useEffect(() => {
@@ -93,10 +106,16 @@ function App() {
     if (game.gameStatus === 'PLAYING') setModalDismissed(false);
   }, [game.gameStatus]);
 
-  const modalTitle   = isWon ? 'You won!' : 'Game over';
-  const modalMessage = isWon
-    ? `You got it in ${game.attempts} ${game.attempts === 1 ? 'try' : 'tries'}!`
-    : `The word was ${mode === 'daily' ? daily.targetWord : practice.targetWord}`;
+  useEffect(() => {
+    if (mode !== 'daily' || !auth.user || !isGameOver) return undefined;
+
+    const timer = window.setTimeout(() => {
+      refetchStats();
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [mode, auth.user, isGameOver, daily.gameStatus, daily.attempts, refetchStats]);
+
   const gameStatusText = game.gameStatus === 'PLAYING'
     ? `${game.attempts}/6 attempts`
     : game.gameStatus.toLowerCase();
@@ -105,6 +124,11 @@ function App() {
     setMode(newMode);
     setModalDismissed(false);
   }, []);
+
+  const handlePracticeReplay = useCallback(() => {
+    practice.startSession();
+    setModalDismissed(false);
+  }, [practice.startSession]);
 
   // ── Loading state ─────────────────────────────────────────────────────
   if (auth.isLoading || (mode === 'daily' && daily.isLoading)) {
@@ -126,6 +150,8 @@ function App() {
           user={auth.user}
           onAuthClick={() => setShowAuthModal(true)}
           onLogout={auth.logout}
+          onStatsClick={() => setShowStatsModal(true)}
+          onLeaderboardClick={() => setShowLeaderboardModal(true)}
         />
         <div className="app-error">
           <p>{daily.error}</p>
@@ -143,6 +169,8 @@ function App() {
         user={auth.user}
         onAuthClick={() => setShowAuthModal(true)}
         onLogout={auth.logout}
+        onStatsClick={() => setShowStatsModal(true)}
+        onLeaderboardClick={() => setShowLeaderboardModal(true)}
       />
 
       {/* Toast notifications (Task 8.10) */}
@@ -176,14 +204,50 @@ function App() {
         />
       </main>
 
-      {/* Game-over modal */}
-      <Modal
-        isOpen={isGameOver && !modalDismissed}
+      {/* Game-over modals (Phase 9) */}
+      <WinModal
+        isOpen={isGameOver && isWon && !modalDismissed}
         onClose={() => setModalDismissed(true)}
-        title={modalTitle}
-        message={modalMessage}
-        onAction={mode === 'practice' ? practice.startSession : undefined}
-        actionText={mode === 'practice' ? 'Play Again' : undefined}
+        attempts={game.attempts}
+        user={auth.user}
+        stats={stats}
+        isStatsLoading={isStatsLoading}
+        statsError={statsError}
+        guessResults={game.guessResults}
+        mode={mode}
+        gameDate={dailyGameDate}
+        onToast={game.showToast}
+        onPlayAgain={handlePracticeReplay}
+      />
+
+      <LoseModal
+        isOpen={isGameOver && !isWon && !modalDismissed}
+        onClose={() => setModalDismissed(true)}
+        answer={mode === 'daily' ? daily.targetWord : practice.targetWord}
+        attempts={game.attempts}
+        guessResults={game.guessResults}
+        mode={mode}
+        gameDate={dailyGameDate}
+        onToast={game.showToast}
+        onPlayAgain={handlePracticeReplay}
+      />
+
+      {/* Stats and leaderboard modals (Phase 9) */}
+      <StatsModal
+        isOpen={showStatsModal}
+        onClose={() => setShowStatsModal(false)}
+        user={auth.user}
+        stats={stats}
+        isLoading={isStatsLoading}
+        error={statsError}
+        refetch={refetchStats}
+        highlightAttempt={mode === 'daily' && daily.gameStatus === 'WON' ? daily.attempts : null}
+      />
+
+      <LeaderboardModal
+        isOpen={showLeaderboardModal}
+        onClose={() => setShowLeaderboardModal(false)}
+        onToast={game.showToast}
       />
 
       {/* Auth modal (Task 8.2, 8.11) */}

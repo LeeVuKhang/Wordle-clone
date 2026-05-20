@@ -1,0 +1,145 @@
+import { useEffect, useState } from 'react';
+import CountdownTimer from './CountdownTimer';
+import ShareButton from './ShareButton';
+import './ResultModal.css';
+import './WinModal.css';
+
+const CONFETTI_COLORS = [
+  'var(--color-correct-strong)',
+  'var(--color-present-strong)',
+  'var(--color-info)',
+  'hsl(286 70% 68%)',
+  'hsl(12 85% 64%)',
+];
+
+function createConfetti() {
+  return Array.from({ length: 52 }, (_, index) => {
+    const angle = (Math.PI * 2 * index) / 52;
+    const radius = 150 + Math.random() * 130;
+    const x = Math.cos(angle) * radius + (Math.random() - 0.5) * 90;
+    const y = Math.sin(angle) * radius - 70 + (Math.random() - 0.5) * 70;
+
+    return {
+      id: index,
+      color: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
+      x: `${x.toFixed(0)}px`,
+      y: `${y.toFixed(0)}px`,
+      rotation: `${Math.floor(Math.random() * 720 - 360)}deg`,
+      delay: `${(Math.random() * 0.18).toFixed(2)}s`,
+      duration: `${(1.65 + Math.random() * 0.8).toFixed(2)}s`,
+    };
+  });
+}
+
+/**
+ * WinModal - daily/practice victory modal with CSS confetti.
+ *
+ * @see WBS Tasks 9.1, 9.3, 9.6
+ */
+const WinModal = ({
+  isOpen,
+  onClose,
+  attempts,
+  user,
+  stats,
+  isStatsLoading,
+  statsError,
+  guessResults,
+  mode,
+  gameDate,
+  onToast,
+  onPlayAgain,
+}) => {
+  const [confetti, setConfetti] = useState([]);
+  const isDaily = mode === 'daily';
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    setConfetti(createConfetti());
+    const timer = window.setTimeout(() => setConfetti([]), 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="result-overlay" onClick={onClose}>
+      <div className="result-modal win-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="win-confetti" aria-hidden="true">
+          {confetti.map((piece) => (
+            <span
+              key={piece.id}
+              className="win-confetti-piece"
+              style={{
+                '--confetti-color': piece.color,
+                '--confetti-x': piece.x,
+                '--confetti-y': piece.y,
+                '--confetti-rotation': piece.rotation,
+                '--confetti-delay': piece.delay,
+                '--confetti-duration': piece.duration,
+              }}
+            />
+          ))}
+        </div>
+
+        <h2 className="result-title">You won!</h2>
+        <p className="result-message">
+          You got it in {attempts} {attempts === 1 ? 'try' : 'tries'}!
+        </p>
+
+        {isDaily && (
+          <div className="win-stats-panel">
+            {user ? (
+              <>
+                {isStatsLoading && <p className="result-note">Refreshing stats...</p>}
+                {!isStatsLoading && stats && (
+                  <div className="win-stats-grid">
+                    <div>
+                      <span>Current streak</span>
+                      <strong>{stats.currentStreak}</strong>
+                    </div>
+                    <div>
+                      <span>Max streak</span>
+                      <strong>{stats.maxStreak}</strong>
+                    </div>
+                  </div>
+                )}
+                {!isStatsLoading && statsError && (
+                  <p className="result-note">{statsError}</p>
+                )}
+              </>
+            ) : (
+              <p className="result-note">Login to see your stats</p>
+            )}
+          </div>
+        )}
+
+        <ShareButton
+          guessResults={guessResults}
+          attempts={attempts}
+          gameStatus="WON"
+          mode={mode}
+          gameDate={gameDate}
+          onToast={onToast}
+        />
+
+        {isDaily && <CountdownTimer />}
+
+        <div className="result-actions">
+          {mode === 'practice' && (
+            <button className="result-btn result-btn--primary" type="button" onClick={onPlayAgain}>
+              Play Again
+            </button>
+          )}
+          <button className="result-btn result-btn--secondary" type="button" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default WinModal;

@@ -1,6 +1,6 @@
 .toast {
   position: fixed;
-  top: 112px;
+  top: 132px;
   left: 50%;
   z-index: 1100;
   max-width: min(92vw, 420px);
@@ -61,7 +61,7 @@
 
 @media (max-width: 640px) {
   .toast {
-    top: 98px;
+    top: 122px;
     font-size: 0.78rem;
   }
 }

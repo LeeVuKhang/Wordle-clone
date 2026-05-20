@@ -101,3 +101,11 @@ export const gameApi = {
    */
   sync: (dto) => api.post('/api/game/sync', dto),
 };
+
+export const statsApi = {
+  /** Load authenticated player's derived stats */
+  getMyStats: () => api.get('/api/stats/me'),
+
+  /** Load public top-streak leaderboard */
+  getLeaderboard: () => api.get('/api/leaderboard'),
+};
