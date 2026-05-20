@@ -1,9 +1,9 @@
 /**
- * Axios API Client — Centralized typed HTTP client
+ * Axios API Client - Centralized typed HTTP client
  *
  * WBS Task 8.1
- * - withCredentials: true  → sends httpOnly cookies (access_token, refresh_token)
- * - X-Guest-ID header      → injected on every request when user is not authenticated
+ * - withCredentials: true  -> sends httpOnly cookies (access_token, refresh_token)
+ * - X-Guest-ID header      -> injected on every request when user is not authenticated
  * - Automatic token refresh on 401 (single-retry with refresh rotation)
  */
 
@@ -14,12 +14,11 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true,         // Required for httpOnly cookie auth
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
   timeout: 10_000,
 });
 
-// ─── Request interceptor — attach Guest-ID header ────────────────────────────
 api.interceptors.request.use((config) => {
   const guestUuid = getGuestUuid();
   if (guestUuid) {
@@ -28,7 +27,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ─── Response interceptor — transparent token refresh on 401 ─────────────────
 let isRefreshing = false;
 let refreshSubscribers = [];
 
@@ -42,14 +40,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Only attempt refresh for 401s that aren't themselves the refresh call
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
       !originalRequest.url?.includes('/api/auth/refresh')
     ) {
       if (isRefreshing) {
-        // Queue callers while refresh is in-flight
         return new Promise((resolve) => {
           refreshSubscribers.push(() => resolve(api(originalRequest)));
         });
@@ -63,7 +59,6 @@ api.interceptors.response.use(
         onTokenRefreshed();
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh failed — user must re-authenticate
         refreshSubscribers = [];
         return Promise.reject(refreshError);
       } finally {
@@ -76,8 +71,6 @@ api.interceptors.response.use(
 );
 
 export default api;
-
-// ─── Auth API ─────────────────────────────────────────────────────────────────
 
 export const authApi = {
   /** Exchange Google OAuth code for JWT tokens */
@@ -98,8 +91,6 @@ export const authApi = {
   getMe: () => api.get('/api/auth/me'),
 };
 
-// ─── Game API ─────────────────────────────────────────────────────────────────
-
 export const gameApi = {
   /** Load today's daily game (returns Base64 word + progress) */
   getToday: () => api.get('/api/game/today'),
@@ -109,17 +100,4 @@ export const gameApi = {
    * @param {{ id: string, guesses: string[], status: 'PLAYING'|'WON'|'LOST' }} dto
    */
   sync: (dto) => api.post('/api/game/sync', dto),
-};
-
-// ─── Practice API ─────────────────────────────────────────────────────────────
-
-export const practiceApi = {
-  /** Start a new practice session */
-  newSession: () => api.post('/api/practice/new'),
-
-  /**
-   * Submit a guess for a practice session (server-side comparison)
-   * @param {{ practiceId: string, guess: string }} dto
-   */
-  guess: (dto) => api.post('/api/practice/guess', dto),
 };

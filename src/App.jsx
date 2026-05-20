@@ -96,7 +96,7 @@ function App() {
   const modalTitle   = isWon ? 'You won!' : 'Game over';
   const modalMessage = isWon
     ? `You got it in ${game.attempts} ${game.attempts === 1 ? 'try' : 'tries'}!`
-    : `The word was ${mode === 'daily' ? daily.targetWord : '???'}`;
+    : `The word was ${mode === 'daily' ? daily.targetWord : practice.targetWord}`;
   const gameStatusText = game.gameStatus === 'PLAYING'
     ? `${game.attempts}/6 attempts`
     : game.gameStatus.toLowerCase();
@@ -183,7 +183,7 @@ function App() {
         title={modalTitle}
         message={modalMessage}
         onAction={mode === 'practice' ? practice.startSession : undefined}
-        actionText={mode === 'practice' ? 'Play again' : undefined}
+        actionText={mode === 'practice' ? 'Play Again' : undefined}
       />
 
       {/* Auth modal (Task 8.2, 8.11) */}
