@@ -19,7 +19,7 @@ class ValidationError extends Error {
 export function validateGuessInput(req: Request, _res: Response, next: NextFunction): void {
     const { guess, guesses } = req.body;
 
-    // Single guess (practice mode)
+    // Single guess payloads, if any endpoint needs them later.
     if (guess !== undefined) {
         validateWord(guess);
     }

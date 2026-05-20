@@ -11,7 +11,6 @@
  *   leaderboard:refresh → sentinel                (TTL: 5min)
  *   rate:guest:{uuid}   → counter                 (TTL: 1min, max 60 req)
  *   rate:user:{id}      → counter                 (TTL: 1min, max 60 req)
- *   practice:{id}       → { word, guesses } JSON  (TTL: 30min)
  *
  * @see WBS Task 5.5, 5.6
  */
@@ -67,8 +66,6 @@ export const REDIS_KEYS = {
     rateGuest: (uuid: string) => `rate:guest:${uuid}`,
     /** Rate limit counter for authenticated users */
     rateUser: (id: string) => `rate:user:${id}`,
-    /** Practice session data */
-    practice: (id: string) => `practice:${id}`,
 } as const;
 
 export const REDIS_TTL = {
@@ -80,8 +77,6 @@ export const REDIS_TTL = {
     LEADERBOARD_REFRESH: 5 * 60,     // 300 seconds
     /** Rate limit window: 1 minute */
     RATE_LIMIT: 60,                   // 60 seconds
-    /** Practice session TTL: 30 minutes */
-    PRACTICE_SESSION: 30 * 60,        // 1800 seconds
 } as const;
 
 /** Maximum requests per rate-limit window */

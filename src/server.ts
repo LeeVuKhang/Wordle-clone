@@ -27,7 +27,6 @@ import { errorMiddleware } from './middleware/error.middleware.js';
 
 // Routes
 import gameRoutes from './modules/game/game.routes.js';
-import practiceRoutes from './modules/practice/practice.routes.js';
 import authRoutes from './modules/auth/auth.routes.js';
 
 
@@ -97,10 +96,6 @@ app.use('/api/auth', authRoutes);
 // Game routes (with input validation on sync)
 app.use('/api/game', gameRoutes);
 app.use('/api/game/sync', validateGuessInput);
-
-// Practice routes (with input validation on guess)
-app.use('/api/practice', practiceRoutes);
-app.use('/api/practice/guess', validateGuessInput);
 
 // ============================================================
 // Error Handler (must be last)

@@ -22,19 +22,6 @@ export interface DailyGameSyncDTO {
     status: 'PLAYING' | 'WON' | 'LOST';
 }
 
-/** Letter comparison result (used by practice mode server-side) */
-export interface LetterResult {
-    letter: string;
-    status: 'correct' | 'present' | 'absent';
-}
-
-/** Practice guess response */
-export interface PracticeGuessResultDTO {
-    result: LetterResult[];
-    attempts: number;
-    status: 'PLAYING' | 'WON' | 'LOST';
-}
-
 /** Authenticated request with user identity */
 export interface AuthenticatedLocals {
     userId?: string;
