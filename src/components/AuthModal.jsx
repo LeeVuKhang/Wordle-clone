@@ -1,15 +1,9 @@
 import './AuthModal.css';
 
 /**
- * AuthModal — Google OAuth login + guest merge UX
- *
- * WBS Tasks 8.2, 8.11
- *
- * Uses the Authorization Code flow (PKCE not needed — server exchanges the code).
- * The Google OAuth consent page is opened in a popup; on redirect the code is
- * extracted and sent to POST /api/auth/google.
+ * AuthModal: Google OAuth login and guest merge UX.
  */
-const AuthModal = ({ isOpen, onClose, onLogin, isLoading, error, mergeResult }) => {
+const AuthModal = ({ isOpen, onClose, isLoading, error, mergeResult }) => {
   if (!isOpen) return null;
 
   const handleGoogleLogin = () => {
@@ -31,7 +25,6 @@ const AuthModal = ({ isOpen, onClose, onLogin, isLoading, error, mergeResult }) 
     <div className="auth-modal-overlay" onClick={onClose}>
       <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
         {mergeResult ? (
-          // Merge success view (Task 8.11)
           <div className="auth-modal__merge-success">
             <h2>Welcome back!</h2>
             <p className="auth-modal__merge-info">
@@ -51,7 +44,6 @@ const AuthModal = ({ isOpen, onClose, onLogin, isLoading, error, mergeResult }) 
             </button>
           </div>
         ) : (
-          // Login view
           <>
             <h2 className="auth-modal__title">Sign in to save progress</h2>
             <p className="auth-modal__subtitle">
@@ -70,11 +62,11 @@ const AuthModal = ({ isOpen, onClose, onLogin, isLoading, error, mergeResult }) 
               onClick={handleGoogleLogin}
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in…' : 'Continue with Google'}
+              {isLoading ? 'Signing in...' : 'Continue with Google'}
             </button>
 
             <p className="auth-modal__guest-note">
-              You can also keep playing as a guest — your progress stays in
+              You can also keep playing as a guest; your progress stays in
               this browser until you sign in.
             </p>
 
