@@ -1,75 +1,137 @@
 .App {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
 }
 
-.App h1 {
-    font-size: 2rem;
-    margin-bottom: 20px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+.game-shell {
+  width: 100%;
+  max-width: 48rem;
+  min-height: calc(100dvh - 116px);
+  margin: 0 auto;
+  padding: 14px 16px 18px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
 }
 
-/* Center the game content */
-.App > *:not(header) {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
+.game-status-strip {
+  width: min(100%, 350px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  box-shadow: var(--shadow-pop);
+  backdrop-filter: blur(16px) saturate(140%);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.App p {
-    color: var(--color-text-secondary);
-    font-size: 1.1rem;
+.app-loading,
+.app-error {
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 
-/* Loading & error states */
-.app-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    gap: 16px;
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
+.App .app-error {
+  min-height: calc(100dvh - 116px);
 }
 
 .spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid var(--color-absent);
-    border-top-color: var(--color-correct);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+  width: 38px;
+  height: 38px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-correct-strong);
+  border-radius: 50%;
+  animation: spin 760ms linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.app-error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    padding: 40px 20px;
-    color: var(--color-text-secondary);
+.app-loading p,
+.app-error p {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .app-error button {
-    padding: 10px 24px;
-    background: var(--color-correct);
-    color: var(--color-text-primary);
-    border: none;
-    border-radius: var(--border-radius);
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  min-height: 42px;
+  padding: 0 22px;
+  border: 1px solid hsl(132 31% 43% / 0.58);
+  border-radius: var(--radius-md);
+  background: var(--color-correct);
+  color: hsl(0 0% 100%);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform var(--transition-fast), filter var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.app-error button:hover { opacity: 0.9; transform: scale(1.05); }
+.app-error button:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 10px 22px hsl(132 31% 20% / 0.22);
+}
+
+.app-error button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .game-shell {
+    min-height: calc(100dvh - 104px);
+    padding: 10px 10px 12px;
+    gap: 10px;
+  }
+
+  .game-status-strip {
+    width: min(100%, 320px);
+    font-size: 0.76rem;
+  }
+}
+
+@media (max-height: 760px) {
+  .game-shell {
+    min-height: calc(100dvh - 100px);
+    padding-top: 8px;
+    padding-bottom: 4px;
+    gap: 8px;
+  }
+
+  .game-status-strip {
+    padding: 7px 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}

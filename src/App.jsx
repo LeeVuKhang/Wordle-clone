@@ -11,7 +11,6 @@ import { useAuth }     from './hooks/useAuth';
 import { useGame }     from './hooks/useGame';
 import { usePractice } from './hooks/usePractice';
 import { initSyncRetryService } from './services/syncRetry.js';
-import { authApi } from './services/api.js';
 
 import './App.css';
 
@@ -98,6 +97,9 @@ function App() {
   const modalMessage = isWon
     ? `You got it in ${game.attempts} ${game.attempts === 1 ? 'try' : 'tries'}!`
     : `The word was ${mode === 'daily' ? daily.targetWord : '???'}`;
+  const gameStatusText = game.gameStatus === 'PLAYING'
+    ? `${game.attempts}/6 attempts`
+    : game.gameStatus.toLowerCase();
 
   const handleModeSwitch = useCallback((newMode) => {
     setMode(newMode);
@@ -109,7 +111,7 @@ function App() {
     return (
       <div className="app-loading">
         <div className="spinner" />
-        <p>Loading…</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -153,19 +155,26 @@ function App() {
         </div>
       )}
 
-      {/* Game board */}
-      <GameBoard
-        guessResults={game.guessResults}
-        currentGuess={game.currentGuess}
-        currentRow={game.submittedWords.length}
-      />
+      <main className="game-shell" aria-label="Wordle game">
+        <section className="game-status-strip" aria-label="Current game status">
+          <span>{mode === 'daily' ? 'Daily Challenge' : 'Practice Mode'}</span>
+          <span>{gameStatusText}</span>
+        </section>
 
-      {/* Virtual keyboard (Task 8.9 — colors from in-memory comparison) */}
-      <Keyboard
-        onKeyPress={game.handleKeyPress}
-        keyboardStatus={game.keyboardStatus}
-        disabled={isGameOver || (mode === 'practice' && practice.isLoading)}
-      />
+        {/* Game board */}
+        <GameBoard
+          guessResults={game.guessResults}
+          currentGuess={game.currentGuess}
+          currentRow={game.submittedWords.length}
+        />
+
+        {/* Virtual keyboard */}
+        <Keyboard
+          onKeyPress={game.handleKeyPress}
+          keyboardStatus={game.keyboardStatus}
+          disabled={isGameOver || (mode === 'practice' && practice.isLoading)}
+        />
+      </main>
 
       {/* Game-over modal */}
       <Modal
@@ -181,7 +190,6 @@ function App() {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => { setShowAuthModal(false); setMergeResult(null); }}
-        onLogin={auth.login}
         isLoading={auth.isLoading}
         error={auth.error}
         mergeResult={mergeResult}

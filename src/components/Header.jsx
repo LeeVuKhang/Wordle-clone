@@ -7,14 +7,25 @@ import './Header.css';
  * WBS Tasks 8.2, 8.8
  */
 const Header = ({ mode, onSwitchMode, user, onAuthClick, onLogout }) => {
+  const activeModeLabel = mode === 'daily' ? 'Daily' : 'Practice';
+
   return (
     <header className="header">
       <div className="header-container">
-        <h1 className="title">WORDLE</h1>
+        <div className="header-side header-side--left" aria-hidden="true">
+          <span className="header-pill">{activeModeLabel}</span>
+        </div>
 
-        <ModeSwitch mode={mode} onSwitch={onSwitchMode} />
+        <div className="brand-panel">
+          <a className="brand-link" href="/" aria-label="Wordle Clone home">
+            <span className="title">Wordle</span>
+            <span className="title-subtitle">Clone</span>
+          </a>
 
-        <div className="header-auth">
+          <ModeSwitch mode={mode} onSwitch={onSwitchMode} />
+        </div>
+
+        <div className="header-side header-auth">
           {user ? (
             <div className="header-user">
               <span className="header-username">
