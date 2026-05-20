@@ -6,19 +6,20 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import VALID_GUESSES from '../data/validGuesses.json';
+import PRACTICE_WORDS_TEXT from '../data/practiceWords.txt?raw';
 import { compareWord, deriveKeyboardStatus, isValidGuess } from '../utils/compareWord.js';
 
 const MAX_ATTEMPTS = 6;
 const PRACTICE_WORDS = [...new Set(
-  VALID_GUESSES
+  PRACTICE_WORDS_TEXT
+    .split(/\r?\n/)
     .map((word) => word.toUpperCase())
     .filter((word) => /^[A-Z]{5}$/.test(word))
 )];
 
 function pickRandomWord(previousWord = null) {
   if (PRACTICE_WORDS.length === 0) {
-    throw new Error('No practice words found in validGuesses.json');
+    throw new Error('No practice words found in practiceWords.txt');
   }
 
   const index = Math.floor(Math.random() * PRACTICE_WORDS.length);
