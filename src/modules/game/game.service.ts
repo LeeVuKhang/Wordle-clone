@@ -9,6 +9,7 @@
 
 import { prisma } from '../../lib/prisma.js';
 import { redis, REDIS_KEYS, REDIS_TTL } from '../../lib/redis.js';
+import { recordHit, recordMiss } from '../../lib/cacheMetrics.js';
 import type { DailyGameResponseDTO, DailyGameSyncDTO } from './game.types.js';
 
 // ============================================================
@@ -28,8 +29,13 @@ async function getDailyWord(): Promise<CachedWord> {
     // Try Redis first
     try {
         const cached = await redis.get<CachedWord>(REDIS_KEYS.DAILY_WORD);
-        if (cached) return cached;
+        if (cached) {
+            recordHit('daily_word');
+            return cached;
+        }
+        recordMiss('daily_word');
     } catch {
+        recordMiss('daily_word');
         console.warn('Redis unavailable, falling back to DB');
     }
 
@@ -142,18 +148,19 @@ export async function syncGame(
         };
     }
 
-    // Upsert guesses
-    const guessOps = dto.guesses.map((word, i) =>
-        prisma.dailyGuess.upsert({
-            where: { gameId_attemptNumber: { gameId: dto.id, attemptNumber: i + 1 } },
-            update: { guessWord: word.toUpperCase() },
-            create: {
-                gameId: dto.id,
-                guessWord: word.toUpperCase(),
-                attemptNumber: i + 1,
-            },
-        })
-    );
+    // Replace guesses in bulk.
+    const guessOps = [
+        prisma.dailyGuess.deleteMany({ where: { gameId: dto.id } }),
+        ...(dto.guesses.length > 0
+            ? [prisma.dailyGuess.createMany({
+                data: dto.guesses.map((word, i) => ({
+                    gameId: dto.id,
+                    guessWord: word.toUpperCase(),
+                    attemptNumber: i + 1,
+                })),
+            })]
+            : []),
+    ];
 
     // Update game state — attempts = guesses.length (WBS 6A.4)
     const isCompleted = dto.status === 'WON' || dto.status === 'LOST';

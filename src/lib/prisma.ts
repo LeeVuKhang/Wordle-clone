@@ -3,9 +3,9 @@
  *
  * Uses @prisma/adapter-pg driver adapter (required by Prisma 6+).
  * Ensures a single PrismaClient instance is shared across the application.
- * Connection pooling is handled by Neon's built-in pooler.
+ * Connection pooling is tuned for Neon's built-in pooler.
  *
- * @see WBS Task 5.7
+ * @see WBS Tasks 5.7, 10.5
  */
 
 import { PrismaClient } from '../generated/prisma/client.js';
@@ -16,10 +16,29 @@ const connectionString = process.env.DATABASE_URL || '';
 
 const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined;
+    pool: pg.Pool | undefined;
 };
 
+function createPool(): pg.Pool {
+    const pool = new pg.Pool({
+        connectionString,
+        max: parseInt(process.env.DB_POOL_MAX || '10', 10),
+        idleTimeoutMillis: 30_000,
+        connectionTimeoutMillis: 5_000,
+    });
+
+    pool.on('error', (err) => {
+        console.error('Unexpected idle client error:', err);
+    });
+
+    return pool;
+}
+
+export const pool =
+    globalForPrisma.pool ??
+    createPool();
+
 function createPrismaClient(): PrismaClient {
-    const pool = new pg.Pool({ connectionString });
     const adapter = new PrismaPg(pool);
     return new PrismaClient({ adapter });
 }
@@ -30,6 +49,7 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') {
     globalForPrisma.prisma = prisma;
+    globalForPrisma.pool = pool;
 }
 
 /**
@@ -39,9 +59,9 @@ if (process.env.NODE_ENV !== 'production') {
 export async function connectDatabase(): Promise<void> {
     try {
         await prisma.$connect();
-        console.log('✅ Database connected successfully');
+        console.log('Database connected successfully');
     } catch (error) {
-        console.error('❌ Database connection failed:', error);
+        console.error('Database connection failed:', error);
         process.exit(1);
     }
 }

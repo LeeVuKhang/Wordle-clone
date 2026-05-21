@@ -8,6 +8,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { redis, REDIS_KEYS, REDIS_TTL, RATE_LIMIT_MAX } from '../lib/redis.js';
+import { recordError, recordHit } from '../lib/cacheMetrics.js';
 
 export async function rateLimitMiddleware(
     req: Request,
@@ -31,6 +32,7 @@ export async function rateLimitMiddleware(
 
     try {
         const current = await redis.incr(key);
+        recordHit('rate_limit');
 
         // Set TTL on first request in window
         if (current === 1) {
@@ -38,18 +40,19 @@ export async function rateLimitMiddleware(
         }
 
         if (current > RATE_LIMIT_MAX) {
+            res.setHeader('Retry-After', '30');
             res.status(429).json({
                 error: {
                     code: 'RATE_LIMIT_EXCEEDED',
                     message: `Rate limit exceeded. Max ${RATE_LIMIT_MAX} requests per minute.`,
                 },
             });
-            res.setHeader('Retry-After', '30');
             return;
         }
 
         next();
     } catch {
+        recordError('rate_limit');
         // If Redis is down, allow the request through
         next();
     }

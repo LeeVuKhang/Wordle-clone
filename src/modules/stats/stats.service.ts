@@ -6,6 +6,7 @@
 
 import { prisma } from '../../lib/prisma.js';
 import { redis, REDIS_KEYS, REDIS_TTL } from '../../lib/redis.js';
+import { recordHit, recordMiss } from '../../lib/cacheMetrics.js';
 import type {
     LeaderboardEntryDTO,
     LeaderboardResponseDTO,
@@ -77,9 +78,9 @@ export async function getLeaderboard(): Promise<LeaderboardResponseDTO> {
         const cached = await redis.get<LeaderboardResponseDTO>(REDIS_KEYS.LEADERBOARD_DATA);
 
         if (cached) {
-            const sentinel = await redis.get<string>(REDIS_KEYS.LEADERBOARD_REFRESH);
-            if (!sentinel) {
-                await setLeaderboardRefreshSentinel();
+            recordHit('leaderboard_data');
+            const shouldRefresh = await setLeaderboardRefreshSentinel();
+            if (shouldRefresh) {
                 void refreshLeaderboardCache().catch((err) => {
                     console.warn('Leaderboard background refresh failed:', err);
                     void redis.del(REDIS_KEYS.LEADERBOARD_REFRESH).catch(() => {
@@ -90,18 +91,29 @@ export async function getLeaderboard(): Promise<LeaderboardResponseDTO> {
             return cached;
         }
 
+        recordMiss('leaderboard_data');
         await setLeaderboardRefreshSentinel();
         return await refreshLeaderboardCache();
     } catch {
+        recordMiss('leaderboard_data');
         return withRefreshWindow(await queryLeaderboardEntries());
     }
 }
 
-async function setLeaderboardRefreshSentinel(): Promise<void> {
-    await redis.set(REDIS_KEYS.LEADERBOARD_REFRESH, '1', {
+async function setLeaderboardRefreshSentinel(): Promise<boolean> {
+    const result = await redis.set(REDIS_KEYS.LEADERBOARD_REFRESH, '1', {
         ex: REDIS_TTL.LEADERBOARD_REFRESH,
         nx: true,
     });
+    const acquired = result !== null;
+
+    if (acquired) {
+        recordMiss('leaderboard_sentinel');
+    } else {
+        recordHit('leaderboard_sentinel');
+    }
+
+    return acquired;
 }
 
 async function refreshLeaderboardCache(): Promise<LeaderboardResponseDTO> {
@@ -127,9 +139,12 @@ async function queryLeaderboardEntries(): Promise<LeaderboardEntryDTO[]> {
             username: true,
             maxStreak: true,
             currentStreak: true,
-            dailyGames: {
-                where: { status: 'WON' },
-                select: { id: true },
+            _count: {
+                select: {
+                    dailyGames: {
+                        where: { status: 'WON' },
+                    },
+                },
             },
         },
     });
@@ -139,6 +154,6 @@ async function queryLeaderboardEntries(): Promise<LeaderboardEntryDTO[]> {
         username: user.username || 'Anonymous',
         maxStreak: user.maxStreak,
         currentStreak: user.currentStreak,
-        gamesWon: user.dailyGames.length,
+        gamesWon: user._count.dailyGames,
     }));
 }
