@@ -1,14 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 
 import Header    from './components/Header';
 import GameBoard from './components/GameBoard';
 import Keyboard  from './components/Keyboard';
 import Toast     from './components/Toast';
-import AuthModal from './components/AuthModal';
-import WinModal  from './components/WinModal';
-import LoseModal from './components/LoseModal';
-import StatsModal from './components/StatsModal';
-import LeaderboardModal from './components/LeaderboardModal';
 
 import { useAuth }     from './hooks/useAuth';
 import { useGame }     from './hooks/useGame';
@@ -17,6 +12,13 @@ import { useStats }    from './hooks/useStats';
 import { initSyncRetryService } from './services/syncRetry.js';
 
 import './App.css';
+
+// Lazy-loaded modals (not needed on initial render)
+const AuthModal = lazy(() => import('./components/AuthModal'));
+const WinModal = lazy(() => import('./components/WinModal'));
+const LoseModal = lazy(() => import('./components/LoseModal'));
+const StatsModal = lazy(() => import('./components/StatsModal'));
+const LeaderboardModal = lazy(() => import('./components/LeaderboardModal'));
 
 // Initialise retry queue listener once at module level
 initSyncRetryService();
@@ -205,59 +207,79 @@ function App() {
       </main>
 
       {/* Game-over modals (Phase 9) */}
-      <WinModal
-        isOpen={isGameOver && isWon && !modalDismissed}
-        onClose={() => setModalDismissed(true)}
-        attempts={game.attempts}
-        user={auth.user}
-        stats={stats}
-        isStatsLoading={isStatsLoading}
-        statsError={statsError}
-        guessResults={game.guessResults}
-        mode={mode}
-        gameDate={dailyGameDate}
-        onToast={game.showToast}
-        onPlayAgain={handlePracticeReplay}
-      />
+      {isGameOver && isWon && !modalDismissed && (
+        <Suspense fallback={null}>
+          <WinModal
+            isOpen
+            onClose={() => setModalDismissed(true)}
+            attempts={game.attempts}
+            user={auth.user}
+            stats={stats}
+            isStatsLoading={isStatsLoading}
+            statsError={statsError}
+            guessResults={game.guessResults}
+            mode={mode}
+            gameDate={dailyGameDate}
+            onToast={game.showToast}
+            onPlayAgain={handlePracticeReplay}
+          />
+        </Suspense>
+      )}
 
-      <LoseModal
-        isOpen={isGameOver && !isWon && !modalDismissed}
-        onClose={() => setModalDismissed(true)}
-        answer={mode === 'daily' ? daily.targetWord : practice.targetWord}
-        attempts={game.attempts}
-        guessResults={game.guessResults}
-        mode={mode}
-        gameDate={dailyGameDate}
-        onToast={game.showToast}
-        onPlayAgain={handlePracticeReplay}
-      />
+      {isGameOver && !isWon && !modalDismissed && (
+        <Suspense fallback={null}>
+          <LoseModal
+            isOpen
+            onClose={() => setModalDismissed(true)}
+            answer={mode === 'daily' ? daily.targetWord : practice.targetWord}
+            attempts={game.attempts}
+            guessResults={game.guessResults}
+            mode={mode}
+            gameDate={dailyGameDate}
+            onToast={game.showToast}
+            onPlayAgain={handlePracticeReplay}
+          />
+        </Suspense>
+      )}
 
       {/* Stats and leaderboard modals (Phase 9) */}
-      <StatsModal
-        isOpen={showStatsModal}
-        onClose={() => setShowStatsModal(false)}
-        user={auth.user}
-        stats={stats}
-        isLoading={isStatsLoading}
-        error={statsError}
-        refetch={refetchStats}
-        highlightAttempt={mode === 'daily' && daily.gameStatus === 'WON' ? daily.attempts : null}
-      />
+      {showStatsModal && (
+        <Suspense fallback={null}>
+          <StatsModal
+            isOpen
+            onClose={() => setShowStatsModal(false)}
+            user={auth.user}
+            stats={stats}
+            isLoading={isStatsLoading}
+            error={statsError}
+            refetch={refetchStats}
+            highlightAttempt={mode === 'daily' && daily.gameStatus === 'WON' ? daily.attempts : null}
+          />
+        </Suspense>
+      )}
 
-      <LeaderboardModal
-        isOpen={showLeaderboardModal}
-        onClose={() => setShowLeaderboardModal(false)}
-        onToast={game.showToast}
-      />
+      {showLeaderboardModal && (
+        <Suspense fallback={null}>
+          <LeaderboardModal
+            isOpen
+            onClose={() => setShowLeaderboardModal(false)}
+            onToast={game.showToast}
+          />
+        </Suspense>
+      )}
 
       {/* Auth modal (Task 8.2, 8.11) */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => { setShowAuthModal(false); setMergeResult(null); }}
-        isLoading={auth.isLoading}
-        error={auth.error}
-        mergeResult={mergeResult}
-      />
+      {showAuthModal && (
+        <Suspense fallback={null}>
+          <AuthModal
+            isOpen
+            onClose={() => { setShowAuthModal(false); setMergeResult(null); }}
+            isLoading={auth.isLoading}
+            error={auth.error}
+            mergeResult={mergeResult}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
