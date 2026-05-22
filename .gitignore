@@ -34,3 +34,6 @@ dist-ssr
 # Build output
 dist/
 build/
+
+# Test output
+coverage/

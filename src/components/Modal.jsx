@@ -1,13 +1,13 @@
 import './Modal.css';
 
-const Modal = ({ isOpen, onClose, title, message, onAction, actionText }) => {
+const Modal = ({ isOpen, onClose, title, message, children, onAction, actionText }) => {
     if (!isOpen) return null;
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <h2 className="modal-title">{title}</h2>
-                <p className="modal-message">{message}</p>
+                {title && <h2 className="modal-title">{title}</h2>}
+                {children || (message && <p className="modal-message">{message}</p>)}
                 <div className="modal-actions">
                     {onAction && actionText && (
                         <button className="modal-btn primary" onClick={onAction}>

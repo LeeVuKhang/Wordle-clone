@@ -1,0 +1,177 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import Cell from '../Cell.jsx';
+import GameBoard from '../GameBoard.jsx';
+import Keyboard from '../Keyboard.jsx';
+import Modal from '../Modal.jsx';
+import ModeSwitch from '../ModeSwitch.jsx';
+
+const completedRow = [
+  { letter: 'C', status: 'correct' },
+  { letter: 'R', status: 'present' },
+  { letter: 'A', status: 'absent' },
+  { letter: 'N', status: 'absent' },
+  { letter: 'E', status: 'correct' },
+];
+
+describe('GameBoard', () => {
+  it('renders 6 rows', () => {
+    const { container } = render(
+      <GameBoard guessResults={[]} currentGuess="" currentRow={0} />,
+    );
+
+    expect(container.querySelectorAll('.row')).toHaveLength(6);
+  });
+
+  it('shows completed rows with colored cells', () => {
+    const { container } = render(
+      <GameBoard guessResults={[completedRow]} currentGuess="" currentRow={1} />,
+    );
+
+    expect(container.querySelectorAll('.row').item(0).querySelectorAll('.correct')).toHaveLength(2);
+    expect(container.querySelectorAll('.row').item(0).querySelectorAll('.present')).toHaveLength(1);
+    expect(container.querySelectorAll('.row').item(0).querySelectorAll('.absent')).toHaveLength(2);
+  });
+
+  it('shows the current guess in the active row', () => {
+    const { container } = render(
+      <GameBoard guessResults={[completedRow]} currentGuess="AD" currentRow={1} />,
+    );
+
+    const activeCells = container.querySelectorAll('.row').item(1).querySelectorAll('.cell');
+    expect(activeCells.item(0)).toHaveTextContent('A');
+    expect(activeCells.item(1)).toHaveTextContent('D');
+    expect(activeCells.item(0)).toHaveClass('filled');
+  });
+});
+
+describe('Keyboard', () => {
+  it('renders all letter keys plus Enter and Delete', () => {
+    render(<Keyboard onKeyPress={vi.fn()} keyboardStatus={{}} disabled={false} />);
+
+    expect(screen.getAllByRole('button')).toHaveLength(28);
+    expect(screen.getByRole('button', { name: 'ENTER' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete letter' })).toBeInTheDocument();
+  });
+
+  it('calls onKeyPress with the clicked key', () => {
+    const onKeyPress = vi.fn();
+    render(<Keyboard onKeyPress={onKeyPress} keyboardStatus={{}} disabled={false} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'A' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete letter' }));
+
+    expect(onKeyPress).toHaveBeenNthCalledWith(1, 'A');
+    expect(onKeyPress).toHaveBeenNthCalledWith(2, 'DELETE');
+  });
+
+  it('applies keyboard status classes', () => {
+    render(
+      <Keyboard
+        onKeyPress={vi.fn()}
+        keyboardStatus={{ A: 'correct', B: 'present', C: 'absent' }}
+        disabled={false}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'A' })).toHaveClass('correct');
+    expect(screen.getByRole('button', { name: 'B' })).toHaveClass('present');
+    expect(screen.getByRole('button', { name: 'C' })).toHaveClass('absent');
+  });
+
+  it('does not call onKeyPress when disabled', () => {
+    const onKeyPress = vi.fn();
+    render(<Keyboard onKeyPress={onKeyPress} keyboardStatus={{}} disabled />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'A' }));
+
+    expect(onKeyPress).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'A' })).toBeDisabled();
+  });
+});
+
+describe('ModeSwitch', () => {
+  it('renders Daily and Practice tabs', () => {
+    render(<ModeSwitch mode="daily" onSwitch={vi.fn()} />);
+
+    expect(screen.getByRole('tab', { name: 'Daily' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Practice' })).toBeInTheDocument();
+  });
+
+  it('marks the active mode', () => {
+    render(<ModeSwitch mode="practice" onSwitch={vi.fn()} />);
+
+    expect(screen.getByRole('tab', { name: 'Practice' })).toHaveClass('mode-btn--active');
+    expect(screen.getByRole('tab', { name: 'Daily' })).not.toHaveClass('mode-btn--active');
+  });
+
+  it('calls onSwitch with the clicked inactive mode', () => {
+    const onSwitch = vi.fn();
+    render(<ModeSwitch mode="daily" onSwitch={onSwitch} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Practice' }));
+
+    expect(onSwitch).toHaveBeenCalledWith('practice');
+  });
+});
+
+describe('Cell', () => {
+  it('renders its letter value', () => {
+    render(<Cell value="A" status="" />);
+
+    expect(screen.getByText('A')).toBeInTheDocument();
+  });
+
+  it('applies status classes', () => {
+    const { container, rerender } = render(<Cell value="A" status="correct" />);
+
+    expect(container.firstChild).toHaveClass('cell', 'correct');
+    rerender(<Cell value="A" status="present" />);
+    expect(container.firstChild).toHaveClass('present');
+    rerender(<Cell value="A" status="absent" />);
+    expect(container.firstChild).toHaveClass('absent');
+    rerender(<Cell value="A" status="filled" />);
+    expect(container.firstChild).toHaveClass('filled');
+  });
+
+  it('sets animation delay for reveal statuses', () => {
+    const { container } = render(<Cell value="A" status="correct" revealDelay={0.2} />);
+
+    expect(container.firstChild).toHaveStyle({ animationDelay: '0.2s' });
+  });
+});
+
+describe('Modal', () => {
+  it('renders children when open', () => {
+    render(
+      <Modal isOpen onClose={vi.fn()} title="Test modal">
+        <p>Modal child content</p>
+      </Modal>,
+    );
+
+    expect(screen.getByText('Modal child content')).toBeInTheDocument();
+  });
+
+  it('does not render when closed', () => {
+    render(
+      <Modal isOpen={false} onClose={vi.fn()} title="Test modal">
+        <p>Hidden content</p>
+      </Modal>,
+    );
+
+    expect(screen.queryByText('Hidden content')).not.toBeInTheDocument();
+  });
+
+  it('calls onClose when the backdrop is clicked', () => {
+    const onClose = vi.fn();
+    const { container } = render(
+      <Modal isOpen onClose={onClose} title="Test modal">
+        <p>Modal child content</p>
+      </Modal>,
+    );
+
+    fireEvent.click(container.querySelector('.modal-overlay'));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
