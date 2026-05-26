@@ -47,6 +47,7 @@ function App() {
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [mergeResult, setMergeResult] = useState(null);
   const [modalDismissed, setModalDismissed] = useState(false);
+  const [shouldRefreshMergedState, setShouldRefreshMergedState] = useState(false);
 
   const auth     = useAuth();
   const daily    = useGame();
@@ -73,11 +74,20 @@ function App() {
       if (data?.mergeResult) {
         setMergeResult(data.mergeResult);
         setShowAuthModal(true);   // show merge success modal
+        setShouldRefreshMergedState(true);
       }
     }).catch(() => {
       // auth.error is set inside the hook
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!shouldRefreshMergedState || !auth.user) return;
+
+    daily.reloadGame();
+    refetchStats();
+    setShouldRefreshMergedState(false);
+  }, [shouldRefreshMergedState, auth.user, daily.reloadGame, refetchStats]);
 
   // ── Start practice session when switching to practice mode ────────────
   useEffect(() => {

@@ -39,8 +39,8 @@ export function useAuth() {
       const res = await authApi.googleLogin(code, redirectUri);
       setUser(res.data.user);
       // Trigger guest data merge immediately after login (Task 7.7)
-      await triggerMerge();
-      return res.data;
+      const mergeResult = await triggerMerge();
+      return { ...res.data, mergeResult };
     } catch (err) {
       const msg = err.response?.data?.error?.message || 'Login failed';
       setError(msg);

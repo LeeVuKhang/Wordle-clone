@@ -37,50 +37,52 @@ export function useGame() {
   const isProcessingRef = useRef(false);
 
   // Load daily game (Task 8.3)
-  useEffect(() => {
-    async function loadGame() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const res = await gameApi.getToday();
-        const data = res.data;
-        const word = atob(data.word);
-        setTargetWord(word);
-        setGameId(data.id);
-        gameIdRef.current = data.id;
-        setGameStatus(data.status);
-        setAttempts(data.attempts);
+  const loadGame = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await gameApi.getToday();
+      const data = res.data;
+      const word = atob(data.word);
+      setTargetWord(word);
+      setGameId(data.id);
+      gameIdRef.current = data.id;
+      setGameStatus(data.status);
+      setAttempts(data.attempts);
+      setCurrentGuess('');
 
-        // Reconcile server state with offline fallback (R9)
-        const offline = getOfflineState();
-        const serverGuesses = data.guesses || [];
-        let reconciledWords = serverGuesses;
-        if (
-          offline &&
-          offline.gameId === data.id &&
-          offline.guesses.length > serverGuesses.length &&
-          data.status === 'PLAYING'
-        ) {
-          reconciledWords = offline.guesses;
-          showToast('Progress restored from offline storage', 'info');
-        }
-
-        const results = reconciledWords.map((w) => compareWord(w, word));
-        setSubmittedWords(reconciledWords);
-        setGuessResults(results);
-        setKeyboardStatus(deriveKeyboardStatus(results));
-
-        if (serverGuesses.length >= (offline?.guesses?.length ?? 0)) {
-          clearOfflineState();
-        }
-      } catch (err) {
-        setError(err.response?.data?.error?.message || "Failed to load today's game");
-      } finally {
-        setIsLoading(false);
+      // Reconcile server state with offline fallback (R9)
+      const offline = getOfflineState();
+      const serverGuesses = data.guesses || [];
+      let reconciledWords = serverGuesses;
+      if (
+        offline &&
+        offline.gameId === data.id &&
+        offline.guesses.length > serverGuesses.length &&
+        data.status === 'PLAYING'
+      ) {
+        reconciledWords = offline.guesses;
+        showToast('Progress restored from offline storage', 'info');
       }
+
+      const results = reconciledWords.map((w) => compareWord(w, word));
+      setSubmittedWords(reconciledWords);
+      setGuessResults(results);
+      setKeyboardStatus(deriveKeyboardStatus(results));
+
+      if (serverGuesses.length >= (offline?.guesses?.length ?? 0)) {
+        clearOfflineState();
+      }
+    } catch (err) {
+      setError(err.response?.data?.error?.message || "Failed to load today's game");
+    } finally {
+      setIsLoading(false);
     }
+  }, [showToast]);
+
+  useEffect(() => {
     loadGame();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadGame]);
 
   // Sync to server (Task 8.5)
   const syncToServer = useCallback((id, words, status) => {
@@ -146,5 +148,6 @@ export function useGame() {
     gameId, targetWord, guessResults, submittedWords,
     currentGuess, keyboardStatus, gameStatus, attempts,
     isLoading, error, toast, showToast, handleKeyPress,
+    reloadGame: loadGame,
   };
 }
