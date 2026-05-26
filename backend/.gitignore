@@ -10,11 +10,15 @@ lerna-debug.log*
 # Dependencies
 node_modules
 
+# Build output
+dist/
+
 # Test output
 coverage/
 
 # Environment variables
 .env
+.env.example
 .env.local
 .env.development.local
 .env.test.local
