@@ -52,6 +52,10 @@ const WinModal = ({
 }) => {
   const [confetti, setConfetti] = useState([]);
   const isDaily = mode === 'daily';
+  const isAuthStatsError =
+    typeof statsError === 'string' &&
+    /auth|unauthorized|refresh token/i.test(statsError);
+  const statsErrorMessage = statsError && !isAuthStatsError ? 'Could not load stats' : null;
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -106,8 +110,8 @@ const WinModal = ({
                     </div>
                   </div>
                 )}
-                {!isStatsLoading && statsError && (
-                  <p className="result-note">{statsError}</p>
+                {!isStatsLoading && statsErrorMessage && (
+                  <p className="result-note">{statsErrorMessage}</p>
                 )}
               </>
             ) : (
