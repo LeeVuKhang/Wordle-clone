@@ -6,7 +6,7 @@ import validGuesses from '../validGuesses.json';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const FE_DATA = path.resolve(dirname, '..');
-const BE_DATA = path.resolve(dirname, '../../../../Wordle-clone-be/src/data');
+const BE_DATA = path.resolve(dirname, '../../../../backend/src/data');
 
 function readWordLines(filePath) {
   return fs.readFileSync(filePath, 'utf8')
