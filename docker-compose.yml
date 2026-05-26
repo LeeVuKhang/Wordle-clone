@@ -1,0 +1,30 @@
+# Local development database only.
+# Redis is intentionally not included because the app uses Upstash Redis through its REST API.
+#
+# Usage:
+#   docker compose up -d postgres
+#   set DATABASE_URL=postgresql://postgres:postgres@localhost:5432/wordle_dev?schema=public
+#   cd backend
+#   npm run prisma:migrate
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wordle-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wordle_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d wordle_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
