@@ -69,7 +69,7 @@ Environment variables:
 FRONTEND_URL=https://wordle-clone-pearl-psi.vercel.app,http://localhost:5173
 ```
 
-The backend `start` script already runs `prisma generate && prisma migrate deploy && node dist/server.js`, so Railway must run the build command before the start command.
+The backend `build` script runs `prisma generate && tsc`, so Railway must run the build command before the start command. The backend `start` script runs `prisma migrate deploy && node dist/server.js`.
 
 ## Cross-Origin Cookies
 

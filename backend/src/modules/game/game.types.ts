@@ -4,7 +4,7 @@
  */
 
 // Re-export Prisma enum for convenience
-export { GameStatus } from '../../generated/prisma/client.js';
+export { GameStatus } from '@prisma/client';
 
 /** Response DTO for GET /api/game/today and POST /api/game/sync */
 export interface DailyGameResponseDTO {
