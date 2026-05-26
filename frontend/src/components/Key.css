@@ -1,0 +1,83 @@
+.key {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 58px;
+  border: 1px solid hsl(220 7% 62% / 0.18);
+  border-radius: var(--radius-sm);
+  padding: 0 4px;
+  background: hsl(220 6% 51%);
+  color: hsl(0 0% 100%);
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.12);
+  transition: transform var(--transition-fast), filter var(--transition-fast), background var(--transition), opacity var(--transition);
+}
+
+.key.wide {
+  flex: 1.52 1 0;
+  font-size: 0.76rem;
+}
+
+.key:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.key:active:not(:disabled) {
+  transform: translateY(1px) scale(0.96);
+}
+
+.key.correct {
+  border-color: hsl(132 31% 54% / 0.42);
+  background: var(--color-correct);
+}
+
+.key.present {
+  border-color: hsl(45 70% 59% / 0.4);
+  background: var(--color-present);
+}
+
+.key.absent {
+  border-color: hsl(220 7% 32% / 0.44);
+  background: var(--color-absent);
+  color: hsl(0 0% 90% / 0.76);
+}
+
+.key:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+@media (max-width: 640px) {
+  .key {
+    height: 56px;
+    border-radius: var(--radius-xs);
+    font-size: 0.86rem;
+  }
+
+  .key.wide {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .key {
+    height: 52px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-height: 760px) {
+  .key {
+    height: 48px;
+    font-size: 0.82rem;
+  }
+
+  .key.wide {
+    font-size: 0.68rem;
+  }
+}

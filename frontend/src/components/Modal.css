@@ -1,0 +1,107 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: hsl(220 18% 4% / 0.72);
+  backdrop-filter: blur(14px);
+  animation: overlay-in 180ms ease;
+}
+
+.modal-content {
+  width: min(100%, 400px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  background: var(--color-surface-strong);
+  color: var(--color-text-primary);
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(20px) saturate(145%);
+  animation: modal-in 240ms ease;
+}
+
+.modal-title {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.modal-message {
+  margin: 0 0 22px;
+  color: var(--color-text-secondary);
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.modal-btn {
+  min-width: 116px;
+  min-height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0 18px;
+  color: var(--color-text-primary);
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.modal-btn.primary {
+  border-color: hsl(132 31% 43% / 0.66);
+  background: var(--color-correct);
+  color: hsl(0 0% 100%);
+}
+
+.modal-btn.secondary {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.modal-btn:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+}
+
+.modal-btn.primary:hover {
+  background: var(--color-correct-strong);
+}
+
+.modal-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

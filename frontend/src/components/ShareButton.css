@@ -1,0 +1,42 @@
+.share-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.share-btn {
+  min-width: 116px;
+  min-height: 42px;
+  border: 1px solid hsl(132 31% 43% / 0.66);
+  border-radius: var(--radius-md);
+  padding: 0 18px;
+  background: var(--color-correct);
+  color: hsl(0 0% 100%);
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.share-btn:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-correct-strong);
+}
+
+.share-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.share-fallback {
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: var(--color-background-soft);
+  color: var(--color-text-primary);
+  font: 700 0.9rem/1.45 var(--font-display);
+}

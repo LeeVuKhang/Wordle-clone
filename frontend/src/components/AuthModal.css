@@ -1,0 +1,128 @@
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: hsl(220 18% 4% / 0.72);
+  backdrop-filter: blur(14px);
+  animation: overlay-in 180ms ease;
+}
+
+.auth-modal {
+  width: min(100%, 390px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  background: var(--color-surface-strong);
+  color: var(--color-text-primary);
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(20px) saturate(145%);
+  animation: modal-in 240ms ease;
+}
+
+.auth-modal__title,
+.auth-modal__merge-success h2 {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: 1.48rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.auth-modal__merge-success h2 {
+  color: var(--color-correct-strong);
+}
+
+.auth-modal__subtitle,
+.auth-modal__merge-info,
+.auth-modal__merge-stats,
+.auth-modal__guest-note {
+  color: var(--color-text-secondary);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.auth-modal__subtitle {
+  margin: 0 0 22px;
+}
+
+.auth-modal__error {
+  margin-bottom: 16px;
+  border: 1px solid hsl(350 82% 66% / 0.32);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  background: hsl(350 82% 66% / 0.12);
+  color: var(--color-danger);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.auth-modal__google-btn,
+.auth-modal__close-btn,
+.auth-modal__dismiss {
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0 18px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.auth-modal__google-btn,
+.auth-modal__close-btn {
+  width: 100%;
+  border-color: hsl(132 31% 43% / 0.66);
+  background: var(--color-correct);
+  color: hsl(0 0% 100%);
+}
+
+.auth-modal__google-btn:hover:not(:disabled),
+.auth-modal__close-btn:hover {
+  background: var(--color-correct-strong);
+}
+
+.auth-modal__google-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.auth-modal__guest-note {
+  margin: 16px 0 12px;
+  font-size: 0.82rem;
+}
+
+.auth-modal__dismiss {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.auth-modal__dismiss:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.auth-modal__google-btn:active:not(:disabled),
+.auth-modal__close-btn:active,
+.auth-modal__dismiss:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.auth-modal__merge-info,
+.auth-modal__merge-stats {
+  margin: 0 0 8px;
+}
+
+.auth-modal__streak {
+  margin: 14px 0 20px;
+  color: var(--color-present-strong);
+  font-size: 0.96rem;
+  font-weight: 700;
+}
