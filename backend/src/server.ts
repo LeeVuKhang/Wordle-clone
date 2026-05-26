@@ -47,10 +47,10 @@ app.use(helmet({
 }));
 
 // CORS - strict origins (Task 7.8)
-const ALLOWED_ORIGINS = [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    // Add production domain(s) here.
-].filter(Boolean);
+const ALLOWED_ORIGINS = (process.env.FRONTEND_URL || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
 app.use(cors({
     origin: (origin, callback) => {
