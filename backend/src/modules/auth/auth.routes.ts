@@ -11,13 +11,14 @@
  */
 
 import { Router } from 'express';
+import { requireAuth } from '../../middleware/auth.middleware.js';
 import * as authController from './auth.controller.js';
 
 const router = Router();
 
 router.post('/google', authController.googleAuth);
 router.post('/refresh', authController.refresh);
-router.post('/merge', authController.mergeGuest);
+router.post('/merge', requireAuth, authController.mergeGuest);
 router.post('/logout', authController.logout);
 router.get('/me', authController.getMe);
 

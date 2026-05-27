@@ -40,6 +40,13 @@ export function useAuth() {
       setUser(res.data.user);
       // Trigger guest data merge immediately after login (Task 7.7)
       const mergeResult = await triggerMerge();
+      if (mergeResult?.stats) {
+        setUser((prev) => prev ? {
+          ...prev,
+          currentStreak: mergeResult.stats.currentStreak,
+          maxStreak: mergeResult.stats.maxStreak,
+        } : prev);
+      }
       return { ...res.data, mergeResult };
     } catch (err) {
       const msg = err.response?.data?.error?.message || 'Login failed';

@@ -48,6 +48,8 @@ export interface AuthResponseDTO {
         id: string;
         email: string;
         username: string | null;
+        currentStreak: number;
+        maxStreak: number;
     };
     /** Access token (also set as httpOnly cookie) */
     accessToken: string;

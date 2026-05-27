@@ -57,6 +57,8 @@ describe('Auth + Merge flow', () => {
             id: USER_ID,
             email: 'player@example.com',
             username: 'Player One',
+            currentStreak: 2,
+            maxStreak: 4,
         });
 
         const res = await request(app)
@@ -68,6 +70,8 @@ describe('Auth + Merge flow', () => {
             id: USER_ID,
             email: 'player@example.com',
             username: 'Player One',
+            currentStreak: 2,
+            maxStreak: 4,
         });
         expect(res.body.accessToken).toEqual(expect.any(String));
         expect(setCookieHeader(res)).toContain('access_token=');

@@ -32,6 +32,10 @@ const StatsModal = ({
 
   const distribution = stats?.guessDistribution || {};
   const maxDistribution = Math.max(1, ...Object.values(distribution));
+  const isAuthError =
+    typeof error === 'string' &&
+    /auth|unauthorized|refresh token/i.test(error);
+  const displayError = error && !isAuthError ? error : null;
 
   return (
     <div className="panel-overlay stats-overlay" onClick={onClose}>
@@ -52,9 +56,9 @@ const StatsModal = ({
           </div>
         )}
 
-        {user && !isLoading && error && (
+        {user && !isLoading && displayError && (
           <div className="stats-error">
-            <p>{error}</p>
+            <p>{displayError}</p>
             <button type="button" onClick={refetch}>Retry</button>
           </div>
         )}

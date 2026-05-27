@@ -131,6 +131,8 @@ export async function authenticateWithGoogle(
             id: user.id,
             email: user.email,
             username: user.username,
+            currentStreak: user.currentStreak,
+            maxStreak: user.maxStreak,
         },
         accessToken,
         refreshToken,

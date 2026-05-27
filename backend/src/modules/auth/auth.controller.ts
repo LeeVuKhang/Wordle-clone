@@ -3,7 +3,7 @@
  *
  * Cookie strategy:
  *   - access_token:  httpOnly, Secure, SameSite=None (cross-origin Vercel/Railway)
- *   - refresh_token: httpOnly, Secure, SameSite=None, Path=/api/auth
+ *   - refresh_token: httpOnly, Secure, SameSite=None, Path=/
  *
  * @see WBS Tasks 7.4, 7.5, 7.6
  */
@@ -61,7 +61,7 @@ export async function googleAuth(
         res.cookie(
             'refresh_token',
             result.refreshToken,
-            cookieOptions(authService.REFRESH_TOKEN_MAX_AGE, '/api/auth'),
+            cookieOptions(authService.REFRESH_TOKEN_MAX_AGE),
         );
 
         res.json({
@@ -107,7 +107,7 @@ export async function refresh(
         res.cookie(
             'refresh_token',
             result.refreshToken,
-            cookieOptions(authService.REFRESH_TOKEN_MAX_AGE, '/api/auth'),
+            cookieOptions(authService.REFRESH_TOKEN_MAX_AGE),
         );
 
         res.json({
@@ -174,8 +174,8 @@ export async function logout(
         }
 
         // Clear cookies
-        res.clearCookie('access_token', { path: '/' });
-        res.clearCookie('refresh_token', { path: '/api/auth' });
+        res.clearCookie('access_token', cookieOptions(0));
+        res.clearCookie('refresh_token', cookieOptions(0));
 
         res.json({ message: 'Logged out successfully' });
     } catch (err) {
