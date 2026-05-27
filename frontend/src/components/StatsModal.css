@@ -1,6 +1,8 @@
 .stats-modal {
-  --panel-modal-width: 460px;
-  --panel-modal-max-height: 720px;
+  --panel-modal-width: 560px;
+  --panel-modal-max-height: 760px;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 
 .stats-header {
@@ -19,7 +21,8 @@
 }
 
 .stats-header button,
-.stats-error button {
+.stats-error button,
+.stats-wordlebot-banner button {
   min-height: 36px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -29,6 +32,14 @@
   font-size: 0.82rem;
   font-weight: 800;
   cursor: pointer;
+}
+
+.stats-header button:hover,
+.stats-error button:hover,
+.stats-wordlebot-banner button:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .stats-empty,
@@ -64,7 +75,6 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  margin-bottom: 22px;
 }
 
 .stats-summary-grid div {
@@ -90,12 +100,69 @@
   line-height: 1;
 }
 
-.stats-distribution h3 {
+.stats-content-scrollable {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.stats-badges-section,
+.stats-distribution,
+.stats-wordlebot-banner {
+  border-top: 1px solid var(--color-border);
+  padding-top: 20px;
+}
+
+.stats-section-title {
+  margin-bottom: 14px;
+}
+
+.stats-section-title h3,
+.stats-distribution h3,
+.stats-wordlebot-banner h3 {
   margin: 0 0 12px;
   color: var(--color-text-secondary);
   font-size: 0.86rem;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.stats-section-title p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.38;
+}
+
+.badges-container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stats-badge-detail {
+  margin-top: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  background: var(--color-surface);
+}
+
+.stats-badge-detail strong,
+.stats-badge-detail span {
+  display: block;
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.stats-badge-detail p {
+  margin: 6px 0 8px;
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.42;
 }
 
 .stats-bar-row {
@@ -140,9 +207,66 @@
   background: var(--color-correct);
 }
 
+.stats-wordlebot-banner {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  background: var(--color-surface);
+}
+
+.stats-wordlebot-mark {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, hsl(0 0% 100% / 0.28), transparent 32%),
+    linear-gradient(145deg, var(--color-info), var(--color-correct-strong));
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.stats-wordlebot-banner h3 {
+  margin-bottom: 4px;
+  color: var(--color-text-primary);
+}
+
+.stats-wordlebot-banner p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.38;
+}
+
+.stats-wordlebot-banner button {
+  white-space: nowrap;
+}
+
 @media (max-width: 460px) {
   .stats-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .badges-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats-wordlebot-banner {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .stats-wordlebot-banner button {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 }
 

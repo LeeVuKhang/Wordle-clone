@@ -6,6 +6,7 @@ import Keyboard from '../Keyboard.jsx';
 import Modal from '../Modal.jsx';
 import ModeSwitch from '../ModeSwitch.jsx';
 import ResultsPanel from '../ResultsPanel.jsx';
+import StatsModal from '../StatsModal.jsx';
 
 const completedRow = [
   { letter: 'C', status: 'correct' },
@@ -238,5 +239,64 @@ describe('ResultsPanel', () => {
     fireEvent.click(screen.getByText('Back to puzzle'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('StatsModal', () => {
+  const stats = {
+    gamesPlayed: 173,
+    gamesWon: 164,
+    winPercentage: 95,
+    currentStreak: 59,
+    maxStreak: 59,
+    guessDistribution: { 1: 0, 2: 3, 3: 26, 4: 60, 5: 12, 6: 1 },
+  };
+
+  it('renders summary, badges, distribution, and Wordle Bot placeholder', () => {
+    const { container } = render(
+      <StatsModal
+        isOpen
+        onClose={vi.fn()}
+        user={{ id: 'user-1' }}
+        stats={stats}
+        isLoading={false}
+        error={null}
+        refetch={vi.fn()}
+        highlightAttempt={4}
+      />,
+    );
+
+    expect(screen.getByText('173')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Badges' })).toBeInTheDocument();
+    expect(screen.getByText('Tap on any badge to view it in detail')).toBeInTheDocument();
+    expect(screen.getByText('Sea of Greens')).toBeInTheDocument();
+    expect(screen.getByText('100-Day Streak')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Guess Distribution' })).toBeInTheDocument();
+    expect(screen.getByText('Wordle Bot gives an analysis of your guesses. Did you beat the bot?'))
+      .toBeInTheDocument();
+
+    const headings = Array.from(container.querySelectorAll('.stats-content-scrollable h3'))
+      .map((heading) => heading.textContent);
+    expect(headings).toEqual(['Badges', 'Guess Distribution', 'Wordle Bot']);
+  });
+
+  it('opens badge detail on click', () => {
+    render(
+      <StatsModal
+        isOpen
+        onClose={vi.fn()}
+        user={{ id: 'user-1' }}
+        stats={stats}
+        isLoading={false}
+        error={null}
+        refetch={vi.fn()}
+        highlightAttempt={4}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('100-Day Streak'));
+
+    expect(screen.getByText('Build a 100-day daily winning streak.')).toBeInTheDocument();
+    expect(screen.getByText('59/100 days')).toBeInTheDocument();
   });
 });

@@ -1,4 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import Badge from './Badge';
+import { computeBadges } from '../utils/badges.js';
 import './PanelModal.css';
 import './StatsModal.css';
 
@@ -22,11 +24,26 @@ const StatsModal = ({
   refetch,
   highlightAttempt,
 }) => {
+  const [selectedBadgeId, setSelectedBadgeId] = useState(null);
+
   useEffect(() => {
     if (isOpen && user) {
       refetch?.();
     }
   }, [isOpen, user, refetch]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedBadgeId(null);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    setSelectedBadgeId(null);
+  }, [stats]);
+
+  const badges = useMemo(() => computeBadges(stats), [stats]);
+  const selectedBadge = badges.find((badge) => badge.id === selectedBadgeId);
 
   if (!isOpen) return null;
 
@@ -64,7 +81,7 @@ const StatsModal = ({
         )}
 
         {user && !isLoading && stats && (
-          <>
+          <div className="stats-content-scrollable">
             <div className="stats-summary-grid">
               <div>
                 <span>Played</span>
@@ -84,8 +101,40 @@ const StatsModal = ({
               </div>
             </div>
 
-            <div className="stats-distribution">
-              <h3>Guess Distribution</h3>
+            <section className="stats-badges-section" aria-labelledby="stats-badges-heading">
+              <div className="stats-section-title">
+                <h3 id="stats-badges-heading">Badges</h3>
+                <p>Tap on any badge to view it in detail</p>
+              </div>
+
+              <div className="badges-container">
+                {badges.map((badge) => (
+                  <Badge
+                    key={badge.id}
+                    {...badge}
+                    isSelected={selectedBadgeId === badge.id}
+                    onSelect={(badgeId) => {
+                      setSelectedBadgeId((currentId) => (
+                        currentId === badgeId ? null : badgeId
+                      ));
+                    }}
+                  />
+                ))}
+              </div>
+
+              {selectedBadge && (
+                <div className="stats-badge-detail" aria-live="polite">
+                  <strong>{selectedBadge.name}</strong>
+                  <p>{selectedBadge.description}</p>
+                  <span>
+                    {selectedBadge.isEarned ? 'Earned' : selectedBadge.progressText}
+                  </span>
+                </div>
+              )}
+            </section>
+
+            <section className="stats-distribution" aria-labelledby="stats-distribution-heading">
+              <h3 id="stats-distribution-heading">Guess Distribution</h3>
               {[1, 2, 3, 4, 5, 6].map((attempt) => {
                 const count = distribution[String(attempt)] || 0;
                 const width = count === 0 ? '0%' : `${Math.max(8, (count / maxDistribution) * 100)}%`;
@@ -105,8 +154,19 @@ const StatsModal = ({
                   </div>
                 );
               })}
-            </div>
-          </>
+            </section>
+
+            <section className="stats-wordlebot-banner" aria-labelledby="stats-wordlebot-heading">
+              <div className="stats-wordlebot-mark" aria-hidden="true">WB</div>
+              <div>
+                <h3 id="stats-wordlebot-heading">Wordle Bot</h3>
+                <p>Wordle Bot gives an analysis of your guesses. Did you beat the bot?</p>
+              </div>
+              <button type="button" onClick={() => window.alert('Coming in Phase 15')}>
+                Check Wordle Bot
+              </button>
+            </section>
+          </div>
         )}
       </div>
     </div>
