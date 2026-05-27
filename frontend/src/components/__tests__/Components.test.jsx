@@ -5,6 +5,7 @@ import GameBoard from '../GameBoard.jsx';
 import Keyboard from '../Keyboard.jsx';
 import Modal from '../Modal.jsx';
 import ModeSwitch from '../ModeSwitch.jsx';
+import ResultsPanel from '../ResultsPanel.jsx';
 
 const completedRow = [
   { letter: 'C', status: 'correct' },
@@ -171,6 +172,70 @@ describe('Modal', () => {
     );
 
     fireEvent.click(container.querySelector('.modal-overlay'));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ResultsPanel', () => {
+  const guessResults = [
+    completedRow,
+    completedRow.map((cell) => ({ ...cell, status: 'correct' })),
+  ];
+
+  it('renders daily results with stats and highlights the winning attempt', () => {
+    const stats = {
+      gamesPlayed: 12,
+      winPercentage: 75,
+      currentStreak: 3,
+      maxStreak: 5,
+      guessDistribution: { 1: 0, 2: 4, 3: 8 },
+    };
+
+    const { container } = render(
+      <ResultsPanel
+        isOpen
+        onClose={vi.fn()}
+        gameStatus="WON"
+        attempts={2}
+        user={{ id: 'user-1' }}
+        stats={stats}
+        isStatsLoading={false}
+        statsError={null}
+        guessResults={guessResults}
+        gameDate="2026-05-27"
+        onToast={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Thanks for playing today!')).toBeInTheDocument();
+    expect(screen.getByText('12')).toBeInTheDocument();
+    expect(screen.getByText('75')).toBeInTheDocument();
+    expect(container.querySelector('.results-bar-row--highlight .results-bar-label'))
+      .toHaveTextContent('2');
+  });
+
+  it('shows guest stats prompt and closes from Back to puzzle', () => {
+    const onClose = vi.fn();
+    render(
+      <ResultsPanel
+        isOpen
+        onClose={onClose}
+        gameStatus="LOST"
+        attempts={6}
+        user={null}
+        stats={null}
+        isStatsLoading={false}
+        statsError={null}
+        guessResults={guessResults}
+        gameDate="2026-05-27"
+        onToast={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Login to see your stats')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Back to puzzle'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

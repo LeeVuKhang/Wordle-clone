@@ -6,7 +6,7 @@ describe('Guest daily play flow', () => {
     cy.wait('@getToday');
   });
 
-  it('loads the daily board, plays guesses, wins, shares, and disables input', () => {
+  it('loads the daily board, plays guesses, wins, opens results, shares, and hides keyboard', () => {
     cy.contains('Daily Challenge').should('be.visible');
     cy.get('.row').should('have.length', 6);
     cy.get('.row').first().find('.cell').should('have.length', 5);
@@ -28,11 +28,21 @@ describe('Guest daily play flow', () => {
     });
 
     cy.submitWord('crane');
-    cy.contains('You won!').should('be.visible');
-    cy.get('.win-confetti-piece').should('exist');
+    cy.contains('You won!').should('not.exist');
+    cy.get('.keyboard').should('not.exist');
+    cy.contains('button', 'See results').should('be.visible').click();
+
+    cy.contains('Thanks for playing today!').should('be.visible');
+    cy.contains('Login to see your stats').should('be.visible');
+    cy.contains('Guess Distribution').should('be.visible');
+    cy.get('.results-bar-row--highlight .results-bar-label').should('have.text', '2');
 
     cy.contains('button', 'Share').click();
     cy.get('@writeText').should('have.been.calledOnce');
-    cy.get('.keyboard button').first().should('be.disabled');
+    cy.contains('Next word').should('be.visible');
+
+    cy.contains('button', 'Back to puzzle').click();
+    cy.contains('Thanks for playing today!').should('not.exist');
+    cy.contains('button', 'See results').should('be.visible');
   });
 });

@@ -19,6 +19,7 @@ const WinModal = lazy(() => import('./components/WinModal'));
 const LoseModal = lazy(() => import('./components/LoseModal'));
 const StatsModal = lazy(() => import('./components/StatsModal'));
 const LeaderboardModal = lazy(() => import('./components/LeaderboardModal'));
+const ResultsPanel = lazy(() => import('./components/ResultsPanel'));
 
 // Initialise retry queue listener once at module level
 initSyncRetryService();
@@ -45,6 +46,7 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [showResultsPanel, setShowResultsPanel] = useState(false);
   const [mergeResult, setMergeResult] = useState(null);
   const [modalDismissed, setModalDismissed] = useState(false);
   const [shouldRefreshMergedState, setShouldRefreshMergedState] = useState(false);
@@ -128,6 +130,12 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [mode, auth.user, isGameOver, daily.gameStatus, daily.attempts, refetchStats]);
 
+  useEffect(() => {
+    if (showResultsPanel && auth.user) {
+      refetchStats();
+    }
+  }, [showResultsPanel, auth.user, refetchStats]);
+
   const gameStatusText = game.gameStatus === 'PLAYING'
     ? `${game.attempts}/6 attempts`
     : game.gameStatus.toLowerCase();
@@ -135,6 +143,7 @@ function App() {
   const handleModeSwitch = useCallback((newMode) => {
     setMode(newMode);
     setModalDismissed(false);
+    setShowResultsPanel(false);
   }, []);
 
   const handlePracticeReplay = useCallback(() => {
@@ -209,15 +218,46 @@ function App() {
         />
 
         {/* Virtual keyboard */}
-        <Keyboard
-          onKeyPress={game.handleKeyPress}
-          keyboardStatus={game.keyboardStatus}
-          disabled={isGameOver || (mode === 'practice' && practice.isLoading)}
-        />
+        {isGameOver && mode === 'daily' ? (
+          <div className="see-results-section">
+            <button
+              className="see-results-btn"
+              type="button"
+              onClick={() => setShowResultsPanel(true)}
+            >
+              See results
+            </button>
+          </div>
+        ) : (
+          <Keyboard
+            onKeyPress={game.handleKeyPress}
+            keyboardStatus={game.keyboardStatus}
+            disabled={isGameOver || (mode === 'practice' && practice.isLoading)}
+          />
+        )}
       </main>
 
-      {/* Game-over modals (Phase 9) */}
-      {isGameOver && isWon && !modalDismissed && (
+      {/* Daily mode uses ResultsPanel instead of auto-popup modals */}
+      {mode === 'daily' && isGameOver && showResultsPanel && (
+        <Suspense fallback={null}>
+          <ResultsPanel
+            isOpen
+            onClose={() => setShowResultsPanel(false)}
+            gameStatus={game.gameStatus}
+            attempts={game.attempts}
+            user={auth.user}
+            stats={stats}
+            isStatsLoading={isStatsLoading}
+            statsError={statsError}
+            guessResults={game.guessResults}
+            gameDate={dailyGameDate}
+            onToast={game.showToast}
+          />
+        </Suspense>
+      )}
+
+      {/* Practice mode keeps the existing WinModal/LoseModal flow */}
+      {mode === 'practice' && isGameOver && isWon && !modalDismissed && (
         <Suspense fallback={null}>
           <WinModal
             isOpen
@@ -236,12 +276,12 @@ function App() {
         </Suspense>
       )}
 
-      {isGameOver && !isWon && !modalDismissed && (
+      {mode === 'practice' && isGameOver && !isWon && !modalDismissed && (
         <Suspense fallback={null}>
           <LoseModal
             isOpen
             onClose={() => setModalDismissed(true)}
-            answer={mode === 'daily' ? daily.targetWord : practice.targetWord}
+            answer={practice.targetWord}
             attempts={game.attempts}
             guessResults={game.guessResults}
             mode={mode}
