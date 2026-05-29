@@ -33,8 +33,8 @@ function consumeOAuthCode() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
   if (code) {
-    // Clean up URL without a page reload
-    window.history.replaceState({}, document.title, window.location.pathname);
+    // Clean up URL without a page reload — redirect to root instead of staying on /auth/callback
+    window.history.replaceState({}, document.title, '/');
     return code;
   }
   return null;
